@@ -10,5 +10,11 @@
     "name": "trumbowyg.media.url",
     "source": "Assets/trumbowyg.media.url.js",
     "tags": ["admin", "dashboard", "js"]
+  },
+  {
+    "action": "vite",
+    "name": "quill-editor",
+    "source": "Assets/QuillEditor/",
+    "tags": ["admin", "dashboard", "js"]
   }
 ]

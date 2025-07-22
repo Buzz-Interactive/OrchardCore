@@ -1,0 +1,17 @@
+@using OrchardCore
+@model HtmlBodyPartViewModel
+
+@{
+    var settings = Model.TypePartDefinition.GetSettings<HtmlBodyPartSettings>();
+    var trumbowygSettings = Model.TypePartDefinition.GetSettings<HtmlBodyPartTrumbowygEditorSettings>();
+    var culture = await Orchard.GetContentCultureAsync(Model.ContentItem) ?? CultureInfo.CurrentUICulture;
+}
+
+<style asp-name="quill-editor" version="1"></style>
+<script type="module" asp-name="quill-editor" version="1" at="Foot"></script>
+
+<div id="app">{{ message }}</div>
+
+<script depends-on="quill-editor" type="module" at="Foot">
+    QuillEditor.initQuillEditor('#app')
+</script>
