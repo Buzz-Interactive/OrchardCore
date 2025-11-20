@@ -18,4 +18,8 @@ public class BagPartSettingsViewModel
     public string Stereotypes { get; set; }
 
     public bool CollapseContainedItems { get; set; }
+
+    public string ButtonText { get; set; }
+
+    public string ContentTypePickerTitle { get; set; }
 }

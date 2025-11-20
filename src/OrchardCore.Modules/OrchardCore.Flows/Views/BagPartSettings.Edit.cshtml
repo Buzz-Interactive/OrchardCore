@@ -42,6 +42,23 @@
     <span class="hint">@T["The display type to use when rendering the content items. Default is Summary."]</span>
 </div>
 
+<div class="mb-3">
+    <div class="w-sm-50" id="@Html.IdFor(x => x.ButtonText)">
+        <label asp-for="ButtonText" class="form-label">@T["Button Text"]</label>
+        <input asp-for="ButtonText" class="form-control medium" />
+        <span class="hint">@T["The text shown on the button. Default is 'Add Item'"]</span>
+    </div>
+</div>
+
+<div class="mb-3">
+    <div class="w-sm-50" id="@Html.IdFor(x => x.ContentTypePickerTitle)">
+        <label asp-for="ContentTypePickerTitle" class="form-label">@T["Content Type Picker Title"]</label>
+        <input asp-for="ContentTypePickerTitle" class="form-control medium" />
+        <span class="hint">@T["The text shown in the content type picker modal. Default is 'Available Items'"]</span>
+    </div>
+</div>
+
+
 <div class="form-check">
     <input type="checkbox" class="form-check-input" asp-for="CollapseContainedItems">
     <label class="form-check-label" asp-for="CollapseContainedItems">@T["Collapse Contained Items"]</label>

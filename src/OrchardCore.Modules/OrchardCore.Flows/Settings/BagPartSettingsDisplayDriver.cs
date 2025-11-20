@@ -37,6 +37,8 @@ public sealed class BagPartSettingsDisplayDriver : ContentTypePartDefinitionDisp
             model.Source = settings.ContainedStereotypes != null && settings.ContainedStereotypes.Length > 0 ? BagPartSettingType.Stereotypes : BagPartSettingType.ContentTypes;
             model.Stereotypes = string.Join(',', settings.ContainedStereotypes ?? []);
             model.CollapseContainedItems = settings.CollapseContainedItems;
+            model.ButtonText = settings.ButtonText;
+            model.ContentTypePickerTitle = settings.ContentTypePickerTitle;
 
             foreach (var contentTypeDefinition in await _contentDefinitionManager.ListTypeDefinitionsAsync())
             {
@@ -55,7 +57,9 @@ public sealed class BagPartSettingsDisplayDriver : ContentTypePartDefinitionDisp
             m => m.DisplayType,
             m => m.Source,
             m => m.Stereotypes,
-            m => m.CollapseContainedItems);
+            m => m.CollapseContainedItems,
+            m => m.ButtonText,
+            m => m.ContentTypePickerTitle);
 
         switch (model.Source)
         {
@@ -105,6 +109,8 @@ public sealed class BagPartSettingsDisplayDriver : ContentTypePartDefinitionDisp
             ContainedStereotypes = [],
             DisplayType = model.DisplayType,
             CollapseContainedItems = model.CollapseContainedItems,
+            ButtonText = model.ButtonText,
+            ContentTypePickerTitle = model.ContentTypePickerTitle,
         });
     }
 }

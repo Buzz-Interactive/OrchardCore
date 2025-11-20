@@ -9,4 +9,8 @@ public class BagPartSettings
     public string DisplayType { get; set; }
 
     public bool CollapseContainedItems { get; set; }
+
+    public string ButtonText { get; set; }
+
+    public string ContentTypePickerTitle { get; set; }
 }
