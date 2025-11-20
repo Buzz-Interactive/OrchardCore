@@ -1,0 +1,240 @@
+/*
+ * Quill Toolbar Builder - Drag-and-Drop UI Styles
+ * Matches OrchardCore admin styling conventions
+ */
+
+/* ========================================
+   Button Palette
+   ======================================== */
+
+.button-palette-item {
+    cursor: move;
+    cursor: grab;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+    user-select: none;
+}
+
+.button-palette-item:hover {
+    background-color: var(--bs-gray-100, #f8f9fa);
+}
+
+.button-palette-item:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+}
+
+.button-palette-item.in-use {
+    opacity: 0.5;
+}
+
+.button-palette-item.in-use .in-use-indicator {
+    display: inline-block !important;
+}
+
+/* Button search styling */
+#button-search {
+    border-radius: 0.25rem;
+}
+
+/* ========================================
+   Toolbar Groups
+   ======================================== */
+
+.toolbar-group {
+    transition: box-shadow 0.2s ease;
+}
+
+.toolbar-group:hover {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.group-drag-handle {
+    cursor: grab;
+    padding: 0.25rem;
+    margin: -0.25rem;
+}
+
+.group-drag-handle:active {
+    cursor: grabbing;
+}
+
+.group-name-input {
+    border: 1px solid transparent;
+    background: transparent;
+    transition: all 0.15s ease;
+}
+
+.group-name-input:hover {
+    border-color: var(--bs-border-color);
+    background: white;
+}
+
+.group-name-input:focus {
+    background: white;
+}
+
+/* ========================================
+   Button Chips
+   ======================================== */
+
+.button-chip {
+    cursor: move;
+    cursor: grab;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+    user-select: none;
+    border: 1px solid var(--bs-border-color);
+}
+
+.button-chip:hover {
+    background-color: var(--bs-gray-200, #e9ecef) !important;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.button-chip:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.button-chip .btn-close {
+    opacity: 0.5;
+    transition: opacity 0.15s ease;
+}
+
+.button-chip:hover .btn-close {
+    opacity: 1;
+}
+
+/* ========================================
+   Drag-and-Drop States (SortableJS)
+   ======================================== */
+
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+}
+
+.sortable-chosen {
+    opacity: 0.9;
+}
+
+.sortable-drag {
+    opacity: 1;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Drop zone highlighting */
+.drop-zone-active {
+    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+    border: 2px dashed var(--bs-primary, #0d6efd);
+    border-radius: 0.375rem;
+}
+
+.drop-zone-placeholder {
+    border: 2px dashed var(--bs-border-color);
+    border-radius: 0.375rem;
+    background-color: var(--bs-gray-50, #fafafa);
+}
+
+/* ========================================
+   Empty States
+   ======================================== */
+
+.empty-state {
+    background-color: var(--bs-gray-50, #fafafa);
+    border: 2px dashed var(--bs-border-color);
+    border-radius: 0.5rem;
+}
+
+/* ========================================
+   Color Palette
+   ======================================== */
+
+.color-item {
+    transition: all 0.15s ease;
+}
+
+.color-item:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.color-preview {
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   Responsive Adjustments
+   ======================================== */
+
+@media (max-width: 991.98px) {
+    /* Stack palette and builder on tablets */
+    .quill-toolbar-builder .col-md-3,
+    .quill-toolbar-builder .col-md-9 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .quill-toolbar-builder .col-md-3 {
+        border-right: none !important;
+        border-bottom: 1px solid var(--bs-border-color);
+    }
+}
+
+@media (max-width: 767.98px) {
+    /* Smaller button chips on mobile */
+    .button-chip {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Smaller palette items */
+    .button-palette-item {
+        font-size: 0.875rem;
+    }
+}
+
+/* ========================================
+   Accessibility
+   ======================================== */
+
+.button-palette-item:focus,
+.button-chip:focus,
+.group-drag-handle:focus {
+    outline: 2px solid var(--bs-primary, #0d6efd);
+    outline-offset: 2px;
+}
+
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    .button-palette-item,
+    .button-chip,
+    .toolbar-group,
+    .color-item {
+        transition: none;
+    }
+}
+
+/* ========================================
+   Accordion Tweaks for Palette
+   ======================================== */
+
+#button-palette .accordion-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+#button-palette .accordion-body {
+    padding: 0.5rem;
+}
+
+#button-palette .accordion-item {
+    border: none;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+#button-palette .accordion-item:last-child {
+    border-bottom: none;
+}

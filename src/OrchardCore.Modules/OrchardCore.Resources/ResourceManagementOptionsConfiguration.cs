@@ -1010,17 +1010,17 @@ public sealed class ResourceManagementOptionsConfiguration
 
         manifest
           .DefineScript("quill")
-          .SetUrl("~/Buzz.OrchardCore.Quilljs/quill/dist/quill.js")
+          .SetUrl("~/OrchardCore.Resources/Scripts/quill.js")
           .SetVersion("2.0.2");
 
         manifest
             .DefineStyle("quill-bubble")
-            .SetCdn("~/OrchardCore.Resources/quill.bubble.css")
+            .SetCdn("~/OrchardCore.Resources/Styles/quill.bubble.css")
             .SetVersion("2.0.2");
 
         manifest
             .DefineStyle("quill-snow")
-            .SetCdn("~/OrchardCore.Resources/quill.snow.css")
+            .SetCdn("~/OrchardCore.Resources/Styles/quill.snow.css")
             .SetVersion("2.0.2");
 
         manifest
@@ -1030,7 +1030,7 @@ public sealed class ResourceManagementOptionsConfiguration
 
         manifest
             .DefineScript("quill-toolbar-builder")
-            .SetUrl("~/Buzz.OrchardCore.Quilljs/Scripts/quill-toolbar-builder.js")
+            .SetUrl("~/OrchardCore.Resources/Scripts/quill-toolbar-builder.js")
             .SetDependencies("sortablejs")
             .SetVersion("1.0.0");
 

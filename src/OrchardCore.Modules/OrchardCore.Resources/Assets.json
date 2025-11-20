@@ -524,5 +524,11 @@
     "name": "contentfields",
     "source": "Assets/quill/quill-toolbar-builder.js",
     "tags": [ "admin", "dashboard", "js" ]
+  },
+  {
+    "action": "min",
+    "name": "contentfields",
+    "source": "Assets/quill/quill-toolbar-builder.css",
+    "tags": [ "admin", "dashboard", "css" ]
   }
 ]
