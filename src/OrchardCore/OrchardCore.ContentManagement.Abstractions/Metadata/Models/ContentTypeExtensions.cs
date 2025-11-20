@@ -49,6 +49,12 @@ public static class ContentTypeExtensions
     public static string GetDescription(this ContentTypeDefinition contentTypeDefinition)
         => contentTypeDefinition.GetSettings().Description;
 
+    public static string GetCategory(this ContentTypeDefinition contentTypeDefinition)
+        => contentTypeDefinition.GetSettings().Category;
+
+    public static string GetThumbnail(this ContentTypeDefinition contentTypeDefinition)
+        => contentTypeDefinition.GetSettings().Thumbnail;
+
     public static ContentTypeSettings GetSettings(this ContentTypeDefinition contentTypeDefinition)
         => contentTypeDefinition.GetSettings<ContentTypeSettings>();
 }

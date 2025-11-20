@@ -27,4 +27,7 @@ public class BagPartEditViewModel
 
     [BindNever]
     public ContentTypePartDefinition TypePartDefinition { get; set; }
+
+    [BindNever]
+    public IEnumerable<string> ContainedContentTypeCategories { get; set; }
 }

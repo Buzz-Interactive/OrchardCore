@@ -1,0 +1,74 @@
+@using OrchardCore.Flows.ViewModels
+@using OrchardCore.Mvc.Utilities
+@using OrchardCore.ContentManagement.Metadata.Models;
+
+ <!-- Content Type Picker Modal -->
+<zone name="Footer">
+    <div class="modal fade modal-widgets" id="content-type-picker-@Model.WidgetTemplatePlaceholderId" tabindex="-1" role="dialog"
+        aria-labelledby="widget-picker-label" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@T["Available Blocks"]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-3 col-md-3 col-lg-2">
+                            <div class="mb-3">
+                                <input class="form-control" type="search" placeholder="@T["Filter"]"
+                                    aria-label="@T["Filter"]" autofocus>
+                            </div>
+                            <ul class="nav nav-pills flex-column content-type-picker-categories">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#all" data-bs-toggle="pill">All</a>
+                                </li>
+
+                                @foreach (var category in (IEnumerable<string>)Model.ContainedContentTypeCategories)
+                                {
+                                    <li class="nav-item" data-category="@category.HtmlClassify()">
+                                        <a class="nav-link" href="#@category.HtmlClassify()"
+                                            data-bs-toggle="pill">@category</a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="col-sm-9 col-md-9 col-lg-10">
+                            <div class="tab-content row row-cols-1 row-cols-md-3 g-2">
+                                @foreach (var type in ((IEnumerable<ContentTypeDefinition>)Model.ContainedContentTypeDefinitions).OrderBy(x => x.DisplayName))
+                                {
+                                    <div class="col js-flow-content-type"
+                                        data-category="@type.GetCategory().HtmlClassify()">
+                                        <div class="card h-100">
+
+                                            <div class="card-body">
+                                                <p class="card-title fw-bold">@type.DisplayName</p>
+                                                <small>@type.GetDescription()</small>
+                                            </div>
+                                            <div class="card-footer text-muted text-xs-right">
+                                                <a class="btn btn-primary btn-sm add-widget"
+                                                    data-target-id="@Model.WidgetTemplatePlaceholderId"
+                                                    data-html-field-prefix="@Model.HtmlFieldPrefix"
+                                                    data-prefixes-name="@Model.PrefixesName"
+                                                    data-contenttypes-name="@Model.ContentTypesName"
+                                                    data-contentitems-name="@Model.ContentItemsName"
+                                                    data-widget-type="@type.Name" 
+                                                    data-flowmetadata="false"
+                                                    data-parent-content-type="@Model.ParentContentType"
+                                                    data-part-name="@Model.PartName"
+                                                    data-bs-dismiss="modal" href="javascript:;">@T["Add"]</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</zone>

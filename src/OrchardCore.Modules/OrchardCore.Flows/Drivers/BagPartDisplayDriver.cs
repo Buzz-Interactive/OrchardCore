@@ -84,6 +84,7 @@ public sealed class BagPartDisplayDriver : ContentPartDisplayDriver<BagPart>
             m.ContainedContentTypeDefinitions = await GetContainedContentTypesAsync(context.TypePartDefinition);
             m.AccessibleWidgets = await GetAccessibleWidgetsAsync(bagPart.ContentItems, contentDefinitionManager);
             m.TypePartDefinition = context.TypePartDefinition;
+            m.ContainedContentTypeCategories = GetContainedContentTypeCategories(m.ContainedContentTypeDefinitions);
         });
     }
 
@@ -287,5 +288,14 @@ public sealed class BagPartDisplayDriver : ContentPartDisplayDriver<BagPart>
     private string GetCurrentOwner()
     {
         return _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    }
+
+    private IEnumerable<string> GetContainedContentTypeCategories(IEnumerable<ContentTypeDefinition> containedContentTypeDefinitions)
+    {
+        return containedContentTypeDefinitions
+            .Select(type => type.GetCategory())
+            .Where(type => !string.IsNullOrWhiteSpace(type))
+            .Distinct()
+            .OrderBy(type => type);
     }
 }
