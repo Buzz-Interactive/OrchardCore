@@ -36,4 +36,14 @@ public class ContentTypeSettings
     /// Gets or sets the description name of this content type.
     /// </summary>
     public string Description { get; set; }
+
+    /// <summary>
+    /// The UI category of this content type.
+    /// </summary>
+    public string Category { get; set; }
+
+    /// <summary>
+    /// The thumbnail image for this content type.
+    /// </summary>
+    public string Thumbnail { get; set; }
 }

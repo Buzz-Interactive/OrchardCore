@@ -39,6 +39,8 @@ public sealed class ContentTypeSettingsDisplayDriver : ContentTypeDefinitionDisp
             model.Securable = settings.Securable;
             model.Stereotype = settings.Stereotype;
             model.Description = settings.Description;
+            model.Category = settings.Category;
+            model.Thumbnail = settings.Thumbnail;
             model.Options = await GetOptionsAsync(contentTypeDefinition, settings.Stereotype);
         }).Location("Content:5");
     }
@@ -91,6 +93,9 @@ public sealed class ContentTypeSettingsDisplayDriver : ContentTypeDefinitionDisp
         {
             context.Builder.Draftable(model.Draftable);
         }
+
+        context.Builder.Category(model.Category);
+        context.Builder.Thumbnail(model.Thumbnail);
     }
 
     private async Task<ContentTypeDefinitionDriverOptions> GetOptionsAsync(ContentTypeDefinition contentTypeDefinition, string stereotype)

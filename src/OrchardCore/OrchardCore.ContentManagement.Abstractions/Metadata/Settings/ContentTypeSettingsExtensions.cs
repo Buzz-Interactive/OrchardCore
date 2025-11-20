@@ -38,4 +38,14 @@ public static class ContentTypeSettingsExtensions
     {
         return builder.MergeSettings<ContentTypeSettings>(x => x.Description = description);
     }
+
+    public static ContentTypeDefinitionBuilder Category(this ContentTypeDefinitionBuilder builder, string category)
+    {
+        return builder.MergeSettings<ContentTypeSettings>(x => x.Category = category);
+    }
+
+    public static ContentTypeDefinitionBuilder Thumbnail(this ContentTypeDefinitionBuilder builder, string thumbnail)
+    {
+        return builder.MergeSettings<ContentTypeSettings>(x => x.Thumbnail = thumbnail);
+    }
 }
