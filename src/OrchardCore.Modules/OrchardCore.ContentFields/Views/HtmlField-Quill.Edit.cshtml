@@ -1,0 +1,168 @@
+@model OrchardCore.ContentFields.ViewModels.EditHtmlFieldViewModel
+@using OrchardCore.ContentManagement.Metadata.Models
+@using OrchardCore.ContentFields.Settings
+@using OrchardCore.Mvc.Utilities
+@{
+  var settings = Model.PartFieldDefinition.GetSettings<HtmlFieldSettings>();
+  var quillSettings = Model.PartFieldDefinition.GetSettings<HtmlFieldQuillEditorSettings>();
+  var culture = await Orchard.GetContentCultureAsync(Model.Field.ContentItem);
+
+  // Initialize with defaults if null (prevents NullReferenceException)
+  if (quillSettings == null || quillSettings.ToolbarConfig == null || quillSettings.ToolbarConfig.Groups == null || quillSettings.ToolbarConfig.Groups.Count == 0)
+  {
+    quillSettings = new HtmlFieldQuillEditorSettings
+    {
+      Theme = QuillTheme.Snow,
+      ToolbarConfig = QuillToolbarConfig.CreateStandard()
+    };
+  }
+
+  string theme;
+  switch (quillSettings.Theme){
+    case QuillTheme.Bubble:
+      theme = "bubble";
+      break;
+    case QuillTheme.Snow:
+      theme = "snow";
+      break;
+    default:
+      theme = "snow";
+      break;
+  }
+}
+<div class="@Orchard.GetFieldWrapperClasses(Model.PartFieldDefinition)" id="@Html.IdFor(x => x.Html)_FieldWrapper">
+    <label asp-for="Html" class="@Orchard.GetLabelClasses()">@Model.PartFieldDefinition.DisplayName()</label>
+    <div class="@Orchard.GetEndClasses()">
+        @await DisplayAsync(await New.ShortcodeModal())
+
+        <div id="@Html.IdFor(m => m.Html)_editor"
+             class="form-control @Html.Raw((quillSettings.Theme == QuillTheme.Bubble) ? "bubble": "")"
+             style="@Html.Raw((quillSettings.Theme == QuillTheme.Snow) ? "border-radius: 0;": "")"
+             data-toolbar-config="@quillSettings.GenerateQuillJson()">
+          @Html.Raw(Model.Html)
+        </div>
+        @if (!string.IsNullOrEmpty(settings.Hint))
+        {
+            <span class="hint">@settings.Hint</span>
+        }
+    </div>
+</div>
+
+<textarea id="@Html.IdFor(x => x.Html)" asp-for="Html" class="d-none"></textarea>
+
+<style asp-name="@($"quill-{theme}")"></style>
+
+@if(quillSettings.Theme == QuillTheme.Bubble)
+{
+    <style asp-name="quill-bubble-override">
+        .form-control.bubble .ql-editor{
+            padding: 0;
+        }
+        /* Ensure bubble tooltip appears above OrchardCore's side drawer and other UI elements */
+        .ql-bubble .ql-tooltip {
+            z-index: 10000 !important;
+        }
+        .ql-bubble .ql-tooltip-editor {
+            z-index: 10001 !important;
+        }
+    </style>
+}
+
+<script asp-name="quill" at="Foot"></script>
+<script at="Foot">
+  $(function () {
+
+    var quillEditor = document.getElementById('@Html.IdFor(x => x.Html)');
+
+    if(quillEditor)
+    {
+        // Override Quill's alignment to use Bootstrap 5 classes
+        const Parchment = Quill.import('parchment');
+
+        // Create custom align attributor that maps Quill values to Bootstrap 5 classes
+        class BootstrapAlignAttributor extends Parchment.ClassAttributor {
+          add(node, value) {
+            // Map Quill's align values to Bootstrap 5 class names
+            const valueMap = {
+              'left': 'start',
+              'right': 'end',
+              'center': 'center',
+              'justify': 'justify'
+            };
+            const mappedValue = valueMap[value] || value;
+            return super.add(node, mappedValue);
+          }
+
+          value(node) {
+            // Map Bootstrap classes back to Quill values
+            const classMap = {
+              'text-start': 'left',
+              'text-end': 'right',
+              'text-center': 'center',
+              'text-justify': 'justify'
+            };
+            const classList = Array.from(node.classList);
+            for (const className of classList) {
+              if (classMap[className]) {
+                return classMap[className];
+              }
+            }
+            return super.value(node);
+          }
+        }
+
+        const AlignClass = new BootstrapAlignAttributor('align', 'text', {
+          scope: Parchment.Scope.BLOCK,
+          whitelist: ['start', 'center', 'end', 'justify']
+        });
+        Quill.register(AlignClass, true);
+
+        // Get toolbar configuration from data attribute (secure, HTML-encoded by Razor)
+        const editorElement = document.getElementById('@Html.IdFor(m => m.Html)_editor');
+        const toolbarConfigJson = editorElement.getAttribute('data-toolbar-config');
+        const toolbarSettings = toolbarConfigJson ? JSON.parse(toolbarConfigJson) : [];
+
+        const quill = new Quill(
+          '#@Html.IdFor(m => m.Html)_editor',
+          {
+              modules: {
+              toolbar: toolbarSettings,
+              },
+              theme: '@theme',
+              bounds: '#@Html.IdFor(x => x.Html)_FieldWrapper'
+          }
+        );
+
+        function imageHandler() {
+
+          $("#mediaApp").detach().appendTo('#mediaModalHtmlField .modal-body');
+          $("#mediaApp").show();
+          mediaApp.selectedMedias = [];
+          var modal = new bootstrap.Modal($("#mediaModalHtmlField"));
+          modal.show();
+
+          //disable an reset on click event over the button to avoid issue if press button multiple times or have multiple editor
+          $('#mediaHtmlFieldSelectButton').off('click');
+          $('#mediaHtmlFieldSelectButton').on('click', function (v) {
+              var range = quill.getSelection();
+              for (i = 0; i < mediaApp.selectedMedias.length; i++) {
+                  quill.insertEmbed(range.index, 'image', mediaApp.selectedMedias[i].url, Quill.sources.USER);
+              }
+
+              modal.hide();
+              return true;
+          });
+        }
+
+        quill.getModule('toolbar').addHandler('image', imageHandler);
+
+        quill.on('image', imageHandler);
+
+        const textarea = document.getElementById('@Html.IdFor(x => x.Html)');
+        quill.on('text-change', (delta, oldDelta, source) => {
+            document.getElementById('@Html.IdFor(x => x.Html)').value = quill.getSemanticHTML();
+            $(document).trigger('contentpreview:render');
+        });
+    }
+  });
+</script>

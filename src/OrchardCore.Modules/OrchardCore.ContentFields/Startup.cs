@@ -73,6 +73,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IContentPartFieldDefinitionDisplayDriver, HtmlFieldSettingsDriver>();
         services.AddScoped<IContentPartFieldDefinitionDisplayDriver, HtmlFieldTrumbowygEditorSettingsDriver>();
         services.AddScoped<IContentPartFieldDefinitionDisplayDriver, HtmlFieldMonacoEditorSettingsDriver>();
+        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, HtmlFieldQuillEditorSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, HtmlFieldIndexHandler>();
 
         // Link Field

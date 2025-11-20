@@ -1,0 +1,245 @@
+@using OrchardCore.ContentFields.Settings
+@model OrchardCore.ContentFields.ViewModels.QuillSettingsViewModel
+
+<style asp-name="quill-toolbar-builder"></style>
+<script asp-name="quill-toolbar-builder" at="Foot"></script>
+
+<div id="@Html.IdFor(m => m)" class="field-editor field-editor-quill quill-toolbar-builder">
+
+    <!-- Header: Theme & Preset Buttons -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-md-4">
+                    <label asp-for="Theme" class="form-label">@T["Theme"]</label>
+                    <select asp-for="Theme" asp-items="Html.GetEnumSelectList<QuillTheme>()" class="form-select"></select>
+                    <span class="hint">@T["Snow shows toolbar always. Bubble shows on selection."]</span>
+                </div>
+                <div class="col-md-8 text-end">
+                    <label class="form-label d-block">@T["Quick Start Templates"]</label>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary load-preset" data-preset="minimal">
+                            <i class="fa-solid fa-minimize me-1"></i>@T["Minimal"]
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary load-preset" data-preset="standard">
+                            <i class="fa-solid fa-star me-1"></i>@T["Standard"]
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary load-preset" data-preset="full">
+                            <i class="fa-solid fa-maximize me-1"></i>@T["Full"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main: Palette + Builder -->
+    <div class="card mb-3">
+        <div class="card-body p-0">
+            <div class="row g-0">
+
+                <!-- Left: Button Palette -->
+                <div class="col-md-3 border-end">
+                    <div class="p-3">
+                        <h6 class="mb-3">@T["Available Buttons"]</h6>
+
+                        <!-- Search -->
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="button-search" placeholder="@T["Search buttons..."]" />
+                        </div>
+
+                        <!-- Button Categories (Accordion) -->
+                        <div class="accordion accordion-flush" id="button-palette">
+
+                            @{
+                                var categories = ButtonRegistry.Categories.ToList();
+                                var allButtons = ButtonRegistry.All.GroupBy(b => b.Category).ToDictionary(g => g.Key, g => g.ToList());
+                            }
+
+                            @foreach (var category in categories)
+                            {
+                                var categoryId = category.Replace(" ", "");
+                                var isFirst = category == categories.First();
+
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button @(isFirst ? "" : "collapsed")" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#collapse-@categoryId">
+                                            @T[category]
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-@categoryId" class="accordion-collapse collapse @(isFirst ? "show" : "")"
+                                         data-bs-parent="#button-palette">
+                                        <div class="accordion-body p-2">
+                                            @if (allButtons.ContainsKey(category))
+                                            {
+                                                @foreach (var button in allButtons[category])
+                                                {
+                                                    <div class="button-palette-item p-2 mb-1 rounded d-flex align-items-center"
+                                                         data-button-type="@button.Type"
+                                                         data-button-category="@category"
+                                                         title="@button.DisplayName">
+                                                        <span class="button-icon me-2 text-center" style="width: 24px; font-weight: bold;">@button.Icon</span>
+                                                        <span class="button-label flex-grow-1 small">@T[button.DisplayName]</span>
+                                                        <span class="in-use-indicator badge bg-secondary" style="display: none;">
+                                                            <i class="fa-solid fa-check fa-xs"></i>
+                                                        </span>
+                                                    </div>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div id="search-empty-state" class="text-center text-muted py-4" style="display: none;">
+                            <i class="fa-solid fa-search fa-2x mb-2 opacity-25"></i>
+                            <p class="small mb-0">@T["No buttons found"]</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Toolbar Builder -->
+                <div class="col-md-9">
+                    <div class="p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">@T["Toolbar Builder"]</h6>
+                            <button type="button" class="btn btn-sm btn-primary" id="add-group-btn">
+                                <i class="fa-solid fa-plus me-1"></i>@T["Add Group"]
+                            </button>
+                        </div>
+
+                        <p class="text-muted small mb-3">
+                            <i class="fa-solid fa-info-circle me-1"></i>
+                            @T["Drag buttons from the palette to build your toolbar. Groups create visual separators."]
+                        </p>
+
+                        <!-- Toolbar Groups Container -->
+                        <div id="toolbar-groups" class="toolbar-groups">
+
+                            @if (Model.Groups != null && Model.Groups.Any())
+                            {
+                                @for (int groupIndex = 0; groupIndex < Model.Groups.Count; groupIndex++)
+                                {
+                                    var group = Model.Groups[groupIndex];
+
+                                    <div class="toolbar-group card mb-3" data-group-id="@group.Id">
+                                        <!-- Hidden inputs for group -->
+                                        <input type="hidden" asp-for="Groups[groupIndex].Id" />
+                                        <input type="hidden" asp-for="Groups[groupIndex].Order" />
+
+                                        <div class="card-header d-flex align-items-center">
+                                            <span class="group-drag-handle me-2" style="cursor: grab;">
+                                                <i class="fa-solid fa-grip-vertical text-muted"></i>
+                                            </span>
+                                            <input type="text"
+                                                   class="form-control form-control-sm group-name-input"
+                                                   asp-for="Groups[groupIndex].Name"
+                                                   placeholder="@T["Group name (optional)"]"
+                                                   style="max-width: 200px;" />
+                                            <span class="badge bg-secondary ms-2">@group.Buttons.Count @T["buttons"]</span>
+                                            <button type="button" class="btn btn-sm btn-link text-danger ms-auto delete-group-btn">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="group-buttons d-flex flex-wrap gap-2" data-group-index="@groupIndex">
+
+                                                @if (group.Buttons != null && group.Buttons.Any())
+                                                {
+                                                    @for (int buttonIndex = 0; buttonIndex < group.Buttons.Count; buttonIndex++)
+                                                    {
+                                                        var button = group.Buttons[buttonIndex];
+                                                        var metadata = ButtonRegistry.Get(button.Type);
+
+                                                        <div class="button-chip badge bg-light text-dark border d-inline-flex align-items-center"
+                                                             data-button-type="@button.Type">
+                                                            <!-- Hidden inputs for button -->
+                                                            <input type="hidden" asp-for="Groups[groupIndex].Buttons[buttonIndex].Type" />
+                                                            <input type="hidden" asp-for="Groups[groupIndex].Buttons[buttonIndex].Value" />
+                                                            <input type="hidden" asp-for="Groups[groupIndex].Buttons[buttonIndex].Order" />
+
+                                                            <span class="button-icon me-1" style="font-weight: bold;">@metadata.Icon</span>
+                                                            <span class="button-label">@metadata.DisplayName</span>
+                                                            @if (!string.IsNullOrEmpty(button.Value))
+                                                            {
+                                                                <span class="button-value ms-1 text-muted small">(@button.Value)</span>
+                                                            }
+                                                            <button type="button" class="btn-close btn-close-sm ms-2 remove-button-btn"
+                                                                    style="font-size: 0.6rem; padding: 0.25rem;"></button>
+                                                        </div>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <div class="drop-zone-placeholder text-center text-muted py-3 w-100">
+                                                        <i class="fa-solid fa-hand-pointer me-2"></i>@T["Drag buttons here"]
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="empty-state text-center text-muted py-5">
+                                    <i class="fa-solid fa-layer-group fa-3x mb-3 opacity-25"></i>
+                                    <h5>@T["No groups yet"]</h5>
+                                    <p>@T["Click 'Add Group' to start building your toolbar"]</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Colors Section -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">@T["Custom Color Palette"]</h6>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">@T["Define custom colors for text and background color pickers. Leave empty to use defaults."]</p>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="color" id="new-color-input" class="form-control form-control-color" value="#000000" title="@T["Choose color"]" />
+                        <button type="button" class="btn btn-primary" id="add-color-btn">
+                            <i class="fa-solid fa-plus me-1"></i>@T["Add Color"]
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div id="color-list" class="d-flex flex-wrap gap-2">
+                        @for (int i = 0; i < Model.CustomColors.Count; i++)
+                        {
+                            <div class="color-item d-inline-flex align-items-center bg-white border rounded-pill px-2 py-1"
+                                 data-color="@Model.CustomColors[i]">
+                                <input type="hidden" asp-for="CustomColors[i]" />
+                                <div class="color-preview me-2 rounded-circle"
+                                     style="width: 24px; height: 24px; background-color: @Model.CustomColors[i]; border: 2px solid #fff;"></div>
+                                <span class="me-2 font-monospace small">@Model.CustomColors[i]</span>
+                                <button type="button" class="btn-close btn-close-sm remove-color-btn" style="font-size: 0.6rem;"></button>
+                            </div>
+                        }
+                    </div>
+                    @if (Model.CustomColors.Count == 0)
+                    {
+                        <div id="empty-color-state" class="text-muted small">
+                            @T["No custom colors added yet"]
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
