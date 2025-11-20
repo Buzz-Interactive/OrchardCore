@@ -1009,6 +1009,32 @@ public sealed class ResourceManagementOptionsConfiguration
             .SetVersion("2.28.0");
 
         manifest
+          .DefineScript("quill")
+          .SetUrl("~/Buzz.OrchardCore.Quilljs/quill/dist/quill.js")
+          .SetVersion("2.0.2");
+
+        manifest
+            .DefineStyle("quill-bubble")
+            .SetCdn("~/OrchardCore.Resources/quill.bubble.css")
+            .SetVersion("2.0.2");
+
+        manifest
+            .DefineStyle("quill-snow")
+            .SetCdn("~/OrchardCore.Resources/quill.snow.css")
+            .SetVersion("2.0.2");
+
+        manifest
+            .DefineStyle("quill-toolbar-builder")
+            .SetUrl("~/OrchardCore.Resources/Styles/quill-toolbar-builder.css")
+            .SetVersion("1.0.0");
+
+        manifest
+            .DefineScript("quill-toolbar-builder")
+            .SetUrl("~/Buzz.OrchardCore.Quilljs/Scripts/quill-toolbar-builder.js")
+            .SetDependencies("sortablejs")
+            .SetVersion("1.0.0");
+
+        manifest
             .DefineScript("credential-helpers")
             .SetUrl(
                 "~/OrchardCore.Resources/Scripts/credential-helpers.min.js",

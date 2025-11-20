@@ -500,5 +500,29 @@
     "source": "../../../node_modules/codemirror/theme/monokai.css",
     "dest": "wwwroot/Styles/codemirror/theme/",
     "tags": ["admin", "css"]
+  },
+  {
+    "action": "copy",
+    "name": "contentfields",
+    "source": "Assets/quill/quill.js",
+    "tags": [ "admin", "dashboard", "js" ]
+  },
+  {
+    "action": "copy",
+    "name": "contentfields",
+    "source": "Assets/quill/quill.bubble.css",
+    "tags": [ "admin", "dashboard", "css" ]
+  },
+  {
+    "action": "copy",
+    "name": "contentfields",
+    "source": "Assets/quill/quill.core.css",
+    "tags": [ "admin", "dashboard", "css" ]
+  },
+  {
+    "action": "min",
+    "name": "contentfields",
+    "source": "Assets/quill/quill-toolbar-builder.js",
+    "tags": [ "admin", "dashboard", "js" ]
   }
 ]
