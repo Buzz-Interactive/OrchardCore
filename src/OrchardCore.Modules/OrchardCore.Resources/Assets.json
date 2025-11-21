@@ -526,7 +526,7 @@
     "tags": [ "admin", "dashboard", "css" ]
   },
   {
-    "action": "min",
+    "action": "copy",
     "name": "contentfields",
     "source": "Assets/quill/quill-toolbar-builder.js",
     "tags": [ "admin", "dashboard", "js" ]

@@ -1,35 +1,374 @@
-!function(){"use strict";let e={groups:[],nextGroupId:1,prefix:""};function t(){if(document.querySelector(".quill-toolbar-builder")){if("undefined"==typeof Sortable){console.error("SortableJS library not loaded! Drag and drop functionality will not work."),console.error("Please ensure SortableJS is included before quill-toolbar-builder.js");return}try{(function(){let t=document.querySelectorAll(".toolbar-group");e.groups=[];let o=document.querySelector('.toolbar-group input[type="hidden"][name*=".Groups["]');if(o){let t=o.name.match(/^(.+)\.Groups\[/);t&&(e.prefix=t[1]+".")}t.forEach((t,o)=>{let n=t.dataset.groupId||`group-${Date.now()}-${o}`,r=[];t.querySelectorAll(".button-chip").forEach(e=>{let t=e.dataset.buttonType;t&&r.push({type:t})}),e.groups.push({id:n,name:t.querySelector(".group-name-input")?.value||"",order:o,buttons:r})}),e.nextGroupId=e.groups.reduce((e,t)=>{let o=t.id.match(/group-(\d+)/);return o?Math.max(e,parseInt(o[1])):e},0)+1})(),document.querySelectorAll("#button-palette .accordion-body").forEach(e=>{try{new Sortable(e,{group:{name:"buttons",pull:"clone",put:!1},animation:150,sort:!1,onStart:function(e){e.item.classList.add("sortable-drag")},onEnd:function(e){e.item.classList.remove("sortable-drag")}})}catch(e){console.error("Failed to initialize palette sortable:",e)}}),function(){let t=document.getElementById("toolbar-groups");try{new Sortable(t,{animation:150,handle:".group-drag-handle",ghostClass:"sortable-ghost",chosenClass:"sortable-chosen",dragClass:"sortable-drag",onEnd:function(){document.querySelectorAll(".toolbar-group").forEach((t,o)=>{let n=t.dataset.groupId,r=e.groups.find(e=>e.id===n);r&&(r.order=o)}),i()}})}catch(e){console.error("Failed to initialize toolbar groups sortable:",e)}document.querySelectorAll(".toolbar-group").forEach(e=>{o(e),a(e),function(e){e.querySelectorAll(".button-chip").forEach(e=>{n(e)})}(e)});let r=document.getElementById("add-group-btn");r&&r.addEventListener("click",l)}(),function(){let t=document.getElementById("color-list"),o=document.getElementById("add-color-btn"),n=document.getElementById("new-color-input");o&&o.addEventListener("click",function(){(function(o){let n=t.querySelectorAll(".color-item").length,r=document.createElement("div");r.className="color-item d-inline-flex align-items-center bg-white border rounded-pill px-2 py-1",r.setAttribute("data-color",o);let l=document.createElement("input");l.type="hidden",l.name=`${e.prefix}CustomColors[${n}]`,l.value=o;let a=document.createElement("div");a.className="color-preview me-2 rounded-circle",a.style.cssText=`width: 24px; height: 24px; background-color: ${o}; border: 2px solid #fff;`;let u=document.createElement("span");u.className="me-2 font-monospace small",u.textContent=o;let s=document.createElement("button");s.type="button",s.className="btn-close btn-close-sm remove-color-btn",s.style.fontSize="0.6rem",r.appendChild(l),r.appendChild(a),r.appendChild(u),r.appendChild(s),t.appendChild(r),document.getElementById("empty-color-state")?.remove()})(n.value)}),t?.addEventListener("click",function(o){o.target.classList.contains("remove-color-btn")&&(o.target.closest(".color-item").remove(),t.querySelectorAll(".color-item").forEach((t,o)=>{t.querySelector('input[type="hidden"]').name=`${e.prefix}CustomColors[${o}]`}))})}(),document.querySelectorAll(".load-preset").forEach(t=>{t.addEventListener("click",function(){(function(t){let n=document.getElementById("toolbar-groups");n.innerHTML="",e.groups=[],e.nextGroupId=1;let l={minimal:[{name:"Basic",buttons:["bold","italic","link"]}],standard:[{name:"Formatting",buttons:["bold","italic","underline","strike"]},{name:"Blocks",buttons:["blockquote","code-block"]},{name:"Lists",buttons:["list"]},{name:"Media",buttons:["link","image","video"]},{name:"Advanced",buttons:["clean"]}],full:[{name:"Text Style",buttons:["bold","italic","underline","strike","code"]},{name:"Color",buttons:["color","background"]},{name:"Structure",buttons:["header","blockquote","code-block"]},{name:"Lists & Align",buttons:["list","align"]},{name:"Advanced",buttons:["script","indent","direction"]},{name:"Media",buttons:["link","image","video","formula"]},{name:"Utilities",buttons:["clean"]}]}[t];l&&(l.forEach((t,l)=>{let u=`group-${Date.now()}-${e.nextGroupId++}`,s=document.createElement("div");s.className="toolbar-group card mb-3",s.dataset.groupId=u,s.innerHTML=`
-                <input type="hidden" name="${e.prefix}Groups[${l}].Id" value="${u}" />
-                <input type="hidden" name="${e.prefix}Groups[${l}].Order" value="${l}" />
-                <div class="card-header d-flex align-items-center">
-                    <span class="group-drag-handle me-2" style="cursor: grab;">
-                        <i class="fa-solid fa-grip-vertical text-muted"></i>
-                    </span>
-                    <input type="text" class="form-control form-control-sm group-name-input"
-                           name="${e.prefix}Groups[${l}].Name"
-                           value="${t.name}" placeholder="Group name (optional)" style="max-width: 200px;" />
-                    <span class="badge bg-secondary ms-2 group-button-count">${t.buttons.length} buttons</span>
-                    <button type="button" class="btn btn-sm btn-link text-danger ms-auto delete-group-btn">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="group-buttons d-flex flex-wrap gap-2"></div>
-                </div>
-            `,n.appendChild(s);let i=s.querySelector(".group-buttons");t.buttons.forEach(e=>{let t=r(e,l);t&&i.appendChild(t)}),o(s),a(s),e.groups.push({id:u,name:t.name,order:l,buttons:t.buttons.map(e=>({type:e}))})}),s(),i())})(this.dataset.preset)})}),function(){let e=document.getElementById("button-search");e&&e.addEventListener("input",function(){let e=this.value.toLowerCase().trim(),t=document.querySelectorAll(".button-palette-item"),o=document.getElementById("button-palette"),n=document.getElementById("search-empty-state"),r=!1;if(""===e){t.forEach(e=>e.style.display=""),o.querySelectorAll(".accordion-collapse").forEach((e,t)=>{0===t?e.classList.add("show"):e.classList.remove("show")}),n&&(n.style.display="none");return}t.forEach(t=>{let o=t.querySelector(".button-label")?.textContent.toLowerCase()||"",n=t.dataset.buttonCategory?.toLowerCase()||"",l=o.includes(e)||n.includes(e);t.style.display=l?"":"none",l&&(r=!0)}),o.querySelectorAll(".accordion-item").forEach(e=>{e.querySelector(".accordion-body").querySelectorAll('.button-palette-item:not([style*="display: none"])').length>0?(e.style.display="",e.querySelector(".accordion-collapse")?.classList.add("show")):e.style.display="none"}),n&&(n.style.display=r?"none":"block")})}(),s()}catch(e){console.error("Error during initialization:",e)}}}function o(e){let t=e.querySelector(".group-buttons");if(t)try{new Sortable(t,{group:"buttons",animation:150,ghostClass:"sortable-ghost",chosenClass:"sortable-chosen",dragClass:"sortable-drag",onAdd:function(e){var t;(t=e).from.classList.contains("accordion-body")?function(e){let t=e.item,o=t.dataset.buttonType,n=e.to.closest(".toolbar-group");t.remove();let l=r(o);if(!l){console.error(`Failed to create button chip for type: ${o}`);return}e.to.appendChild(l),e.to.querySelector(".drop-zone-placeholder")?.remove(),u(n),s(),i()}(t):function(e){let t=e.to.closest(".toolbar-group");e.to.querySelector(".drop-zone-placeholder")?.remove(),u(t);let o=e.from.closest(".toolbar-group");o&&u(o),s(),i()}(t)},onRemove:function(){s(),i()},onUpdate:function(){i()},onEnd:function(){i()}})}catch(e){console.error("Failed to initialize group buttons sortable:",e)}}function n(e){let t=e.querySelector(".remove-button-btn");if(!t)return;let o=t.cloneNode(!0);t.parentNode.replaceChild(o,t),o.addEventListener("click",function(t){t.preventDefault();let o=e.closest(".toolbar-group");if(!o)return;let n=o.querySelector(".group-buttons");if(e.remove(),0===n.querySelectorAll(".button-chip").length){let e=document.createElement("div");e.className="drop-zone-placeholder text-center text-muted py-3 w-100",e.innerHTML='<i class="fa-solid fa-hand-pointer me-2"></i>Drag buttons here',n.appendChild(e)}u(o),s(),i()})}function r(e){let t=document.querySelector(`.button-palette-item[data-button-type="${e}"]`);if(!t)return null;let o=t.querySelector(".button-icon")?.textContent||"",r=t.querySelector(".button-label")?.textContent||e,l=document.createElement("div");return l.className="button-chip badge bg-light text-dark border d-inline-flex align-items-center",l.dataset.buttonType=e,l.innerHTML=`
-            <span class="button-icon me-1" style="font-weight: bold;">${o}</span>
-            <span class="button-label">${r}</span>
+/**
+ * Quill Toolbar Builder - Drag-and-Drop Interactive UI
+ * Manages toolbar configuration with SortableJS
+ */
+
+(function () {
+    'use strict';
+
+    // Module state
+    let state = {
+        groups: [],
+        buttonRegistry: {},
+        nextGroupId: 1,
+        prefix: '' // Will be detected from existing form inputs
+    };
+
+    /**
+     * Main initialization function
+     */
+    function initialize() {
+        const container = document.querySelector('.quill-toolbar-builder');
+        if (!container) return;
+
+        // Check if SortableJS is loaded
+        if (typeof Sortable === 'undefined') {
+            console.error('SortableJS library not loaded! Drag and drop functionality will not work.');
+            console.error('Please ensure SortableJS is included before quill-toolbar-builder.js');
+            return;
+        }
+
+        try {
+            initializeState();
+            initializePalette();
+            initializeToolbarGroups();
+            initializeColorPalette();
+            initializePresetButtons();
+            initializeButtonSearch();
+
+            // Update button usage indicators for existing buttons
+            updateButtonUsageIndicators();
+        } catch (error) {
+            console.error('Error during initialization:', error);
+        }
+    }
+
+    // Initialize when DOM is ready (handle race condition)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+        // DOM already loaded, initialize immediately
+        initialize();
+    }
+
+    /**
+     * Initialize state from DOM (existing groups and buttons)
+     */
+    function initializeState() {
+        const groupElements = document.querySelectorAll('.toolbar-group');
+        state.groups = [];
+
+        // Detect prefix from first hidden input
+        const firstHiddenInput = document.querySelector('.toolbar-group input[type="hidden"][name*=".Groups["]');
+        if (firstHiddenInput) {
+            const name = firstHiddenInput.name;
+            const match = name.match(/^(.+)\.Groups\[/);
+            if (match) {
+                state.prefix = match[1] + '.';
+            }
+        }
+
+        groupElements.forEach((groupEl, index) => {
+            const groupId = groupEl.dataset.groupId || `group-${Date.now()}-${index}`;
+            const buttons = [];
+
+            groupEl.querySelectorAll('.button-chip').forEach(buttonChip => {
+                const buttonType = buttonChip.dataset.buttonType;
+                if (buttonType) {
+                    buttons.push({ type: buttonType });
+                }
+            });
+
+            state.groups.push({
+                id: groupId,
+                name: groupEl.querySelector('.group-name-input')?.value || '',
+                order: index,
+                buttons: buttons
+            });
+        });
+
+        // Calculate next group ID
+        const maxId = state.groups.reduce((max, g) => {
+            const match = g.id.match(/group-(\d+)/);
+            return match ? Math.max(max, parseInt(match[1])) : max;
+        }, 0);
+        state.nextGroupId = maxId + 1;
+    }
+
+    /**
+     * Initialize button palette with drag-and-drop (clone mode)
+     */
+    function initializePalette() {
+        const categories = document.querySelectorAll('#button-palette .accordion-body');
+
+        categories.forEach(categoryBody => {
+            try {
+                new Sortable(categoryBody, {
+                    group: {
+                        name: 'buttons',
+                        pull: 'clone',
+                        put: false
+                    },
+                    animation: 150,
+                    sort: false,
+                    onStart: function (evt) {
+                        evt.item.classList.add('sortable-drag');
+                    },
+                    onEnd: function (evt) {
+                        evt.item.classList.remove('sortable-drag');
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to initialize palette sortable:', error);
+            }
+        });
+    }
+
+    /**
+     * Initialize toolbar groups area with drag-and-drop
+     */
+    function initializeToolbarGroups() {
+        const toolbarGroups = document.getElementById('toolbar-groups');
+
+        // Make groups themselves sortable
+        try {
+            new Sortable(toolbarGroups, {
+                animation: 150,
+                handle: '.group-drag-handle',
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onEnd: function () {
+                    updateGroupOrder();
+                    syncStateToDOM();
+                }
+            });
+        } catch (error) {
+            console.error('Failed to initialize toolbar groups sortable:', error);
+        }
+
+        // Initialize existing groups
+        document.querySelectorAll('.toolbar-group').forEach(groupEl => {
+            initializeGroupButtons(groupEl);
+            attachGroupEventListeners(groupEl);
+            initializeExistingButtonChips(groupEl); // Attach event listeners to server-rendered button chips
+        });
+
+        // Add Group button
+        const addGroupBtn = document.getElementById('add-group-btn');
+        if (addGroupBtn) {
+            addGroupBtn.addEventListener('click', addNewGroup);
+        }
+    }
+
+    /**
+     * Initialize buttons area within a group
+     */
+    function initializeGroupButtons(groupEl) {
+        const buttonsContainer = groupEl.querySelector('.group-buttons');
+        if (!buttonsContainer) return;
+
+        try {
+            new Sortable(buttonsContainer, {
+                group: 'buttons',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onAdd: function (evt) {
+                    handleButtonAdd(evt);
+                },
+                onRemove: function () {
+                    updateButtonUsageIndicators();
+                    syncStateToDOM();
+                },
+                onUpdate: function () {
+                    // Called when item is reordered within the same list
+                    syncStateToDOM();
+                },
+                onEnd: function () {
+                    syncStateToDOM();
+                }
+            });
+        } catch (error) {
+            console.error('Failed to initialize group buttons sortable:', error);
+        }
+    }
+
+    /**
+     * Detect if item came from palette or another group and handle accordingly
+     */
+    function handleButtonAdd(evt) {
+        // Determine if this is a clone from palette or a move between groups
+        const isFromPalette = evt.from.classList.contains('accordion-body');
+
+        if (isFromPalette) {
+            handleButtonClone(evt);
+        } else {
+            handleButtonMove(evt);
+        }
+    }
+
+    /**
+     * Handle button being cloned from palette to a group
+     */
+    function handleButtonClone(evt) {
+        const paletteItem = evt.item;
+        const buttonType = paletteItem.dataset.buttonType;
+        const groupEl = evt.to.closest('.toolbar-group');
+
+        // Remove palette item clone (we'll create a proper button chip)
+        paletteItem.remove();
+
+        // Create button chip with null check
+        const buttonChip = createButtonChip(buttonType);
+        if (!buttonChip) {
+            console.error(`Failed to create button chip for type: ${buttonType}`);
+            return;
+        }
+
+        evt.to.appendChild(buttonChip);
+
+        // Remove empty state if present
+        evt.to.querySelector('.drop-zone-placeholder')?.remove();
+
+        // Update button count badge
+        updateGroupButtonCount(groupEl);
+
+        // Update "in use" indicators
+        updateButtonUsageIndicators();
+
+        // Sync to hidden inputs
+        syncStateToDOM();
+    }
+
+    /**
+     * Handle button being moved between groups
+     */
+    function handleButtonMove(evt) {
+        const groupEl = evt.to.closest('.toolbar-group');
+
+        // Item is already a button chip, no need to recreate
+        // Just update the UI state
+
+        // Remove empty state if present
+        evt.to.querySelector('.drop-zone-placeholder')?.remove();
+
+        // Update button count badges for both source and destination
+        updateGroupButtonCount(groupEl);
+        const sourceGroup = evt.from.closest('.toolbar-group');
+        if (sourceGroup) {
+            updateGroupButtonCount(sourceGroup);
+        }
+
+        // Update "in use" indicators
+        updateButtonUsageIndicators();
+
+        // Sync to hidden inputs
+        syncStateToDOM();
+    }
+
+    /**
+     * Attach remove button event listener to a button chip
+     */
+    function attachRemoveButtonListener(chip) {
+        const removeBtn = chip.querySelector('.remove-button-btn');
+        if (!removeBtn) return;
+
+        // Remove existing listener if any (to prevent duplicates)
+        const newRemoveBtn = removeBtn.cloneNode(true);
+        removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
+
+        newRemoveBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // Get references BEFORE removing the chip from DOM
+            const groupEl = chip.closest('.toolbar-group');
+            if (!groupEl) return;
+
+            const buttonsContainer = groupEl.querySelector('.group-buttons');
+
+            // Remove the chip
+            chip.remove();
+
+            // Show empty state if no buttons left
+            if (buttonsContainer.querySelectorAll('.button-chip').length === 0) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'drop-zone-placeholder text-center text-muted py-3 w-100';
+                placeholder.innerHTML = '<i class="fa-solid fa-hand-pointer me-2"></i>Drag buttons here';
+                buttonsContainer.appendChild(placeholder);
+            }
+
+            updateGroupButtonCount(groupEl);
+            updateButtonUsageIndicators();
+            syncStateToDOM();
+        });
+    }
+
+    /**
+     * Initialize event listeners for existing button chips (server-rendered)
+     */
+    function initializeExistingButtonChips(groupEl) {
+        const buttonChips = groupEl.querySelectorAll('.button-chip');
+        buttonChips.forEach(chip => {
+            attachRemoveButtonListener(chip);
+        });
+    }
+
+    /**
+     * Create a button chip element
+     */
+    function createButtonChip(buttonType) {
+        // Get button metadata from palette
+        const paletteItem = document.querySelector(`.button-palette-item[data-button-type="${buttonType}"]`);
+        if (!paletteItem) {
+            return null;
+        }
+
+        const icon = paletteItem.querySelector('.button-icon')?.textContent || '';
+        const label = paletteItem.querySelector('.button-label')?.textContent || buttonType;
+
+        const chip = document.createElement('div');
+        chip.className = 'button-chip badge bg-light text-dark border d-inline-flex align-items-center';
+        chip.dataset.buttonType = buttonType;
+
+        chip.innerHTML = `
+            <span class="button-icon me-1" style="font-weight: bold;">${icon}</span>
+            <span class="button-label">${label}</span>
             <button type="button" class="btn-close btn-close-sm ms-2 remove-button-btn"
                     style="font-size: 0.6rem; padding: 0.25rem;"></button>
-        `,n(l),l}function l(){let t=document.getElementById("toolbar-groups"),n=document.querySelectorAll(".toolbar-group").length,r=`group-${Date.now()}-${e.nextGroupId++}`;t.querySelector(".empty-state")?.remove();let l=document.createElement("div");l.className="toolbar-group card mb-3",l.dataset.groupId=r,l.innerHTML=`
-            <input type="hidden" name="${e.prefix}Groups[${n}].Id" value="${r}" />
-            <input type="hidden" name="${e.prefix}Groups[${n}].Order" value="${n}" />
+        `;
+
+        // Attach remove button handler
+        attachRemoveButtonListener(chip);
+
+        return chip;
+    }
+
+    /**
+     * Add new group
+     */
+    function addNewGroup() {
+        const toolbarGroups = document.getElementById('toolbar-groups');
+        const groupCount = document.querySelectorAll('.toolbar-group').length;
+        const groupId = `group-${Date.now()}-${state.nextGroupId++}`;
+
+        // Remove empty state if present
+        toolbarGroups.querySelector('.empty-state')?.remove();
+
+        const groupEl = document.createElement('div');
+        groupEl.className = 'toolbar-group card mb-3';
+        groupEl.dataset.groupId = groupId;
+
+        groupEl.innerHTML = `
+            <input type="hidden" name="${state.prefix}Groups[${groupCount}].Id" value="${groupId}" />
+            <input type="hidden" name="${state.prefix}Groups[${groupCount}].Order" value="${groupCount}" />
             <div class="card-header d-flex align-items-center">
                 <span class="group-drag-handle me-2" style="cursor: grab;">
                     <i class="fa-solid fa-grip-vertical text-muted"></i>
                 </span>
                 <input type="text" class="form-control form-control-sm group-name-input"
-                       name="${e.prefix}Groups[${n}].Name"
+                       name="${state.prefix}Groups[${groupCount}].Name"
                        placeholder="Group name (optional)" style="max-width: 200px;" />
                 <span class="badge bg-secondary ms-2 group-button-count">0 buttons</span>
                 <button type="button" class="btn btn-sm btn-link text-danger ms-auto delete-group-btn">
@@ -43,11 +382,419 @@
                     </div>
                 </div>
             </div>
-        `,t.appendChild(l),o(l),a(l),e.groups.push({id:r,name:"",order:n,buttons:[]}),i()}function a(e){let t=e.querySelector(".delete-group-btn");t&&t.addEventListener("click",function(){e.remove();let t=document.getElementById("toolbar-groups");0===t.querySelectorAll(".toolbar-group").length&&(t.innerHTML=`
+        `;
+
+        toolbarGroups.appendChild(groupEl);
+
+        // Initialize sortable for this group's buttons
+        initializeGroupButtons(groupEl);
+        attachGroupEventListeners(groupEl);
+
+        // Update state
+        state.groups.push({
+            id: groupId,
+            name: '',
+            order: groupCount,
+            buttons: []
+        });
+
+        syncStateToDOM();
+    }
+
+    /**
+     * Attach event listeners to a group
+     */
+    function attachGroupEventListeners(groupEl) {
+        // Delete group button
+        const deleteBtn = groupEl.querySelector('.delete-group-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function () {
+                groupEl.remove();
+
+                // Show empty state if no groups left
+                const toolbarGroups = document.getElementById('toolbar-groups');
+                if (toolbarGroups.querySelectorAll('.toolbar-group').length === 0) {
+                    toolbarGroups.innerHTML = `
                         <div class="empty-state text-center text-muted py-5">
                             <i class="fa-solid fa-layer-group fa-3x mb-3 opacity-25"></i>
                             <h5>No groups yet</h5>
                             <p>Click 'Add Group' to start building your toolbar</p>
                         </div>
-                    `),s(),i()})}function u(e){let t=e.querySelectorAll(".button-chip").length,o=e.querySelector(".group-button-count");if(o)o.textContent=`${t} button${1!==t?"s":""}`;else{let o=e.querySelector(".badge.bg-secondary");o&&(o.textContent=`${t} button${1!==t?"s":""}`)}}function s(){let e=new Set;document.querySelectorAll(".button-chip").forEach(t=>{e.add(t.dataset.buttonType)}),document.querySelectorAll(".button-palette-item").forEach(t=>{let o=t.dataset.buttonType;if(e.has(o)){t.classList.add("in-use");let e=t.querySelector(".in-use-indicator");e&&(e.style.display="inline-block")}else{t.classList.remove("in-use");let e=t.querySelector(".in-use-indicator");e&&(e.style.display="none")}})}function i(){document.getElementById("toolbar-groups").querySelectorAll(".toolbar-group").forEach((t,o)=>{let n=t.dataset.groupId,r=t.querySelector(".group-name-input"),l=t.querySelectorAll(".button-chip");d(t,`${e.prefix}Groups[${o}].Id`,n),d(t,`${e.prefix}Groups[${o}].Order`,o),r&&(r.name=`${e.prefix}Groups[${o}].Name`),l.forEach((t,n)=>{let r=t.dataset.buttonType,l=t.dataset.buttonValue||"";t.querySelectorAll('input[type="hidden"]').forEach(e=>e.remove());let a=c(`${e.prefix}Groups[${o}].Buttons[${n}].Type`,r),u=c(`${e.prefix}Groups[${o}].Buttons[${n}].Value`,l),s=c(`${e.prefix}Groups[${o}].Buttons[${n}].Order`,n);t.appendChild(a),t.appendChild(u),t.appendChild(s)}),u(t)})}function d(e,t,o){let n=e.querySelector(`input[type="hidden"][name="${t}"]`);return n?n.value=null!=o?String(o):"":(n=c(t,o),e.appendChild(n)),n}function c(e,t){let o=document.createElement("input");return o.type="hidden",o.name=e,o.value=null!=t?String(t):"",o}"loading"===document.readyState?document.addEventListener("DOMContentLoaded",t):t()}();
-//# sourceMappingURL=quill-toolbar-builder.map
+                    `;
+                }
+
+                updateButtonUsageIndicators();
+                syncStateToDOM();
+            });
+        }
+
+        // Group name input - no listener needed, it's a regular form input with proper name attribute
+    }
+
+    /**
+     * Update group order after drag
+     */
+    function updateGroupOrder() {
+        document.querySelectorAll('.toolbar-group').forEach((groupEl, index) => {
+            const groupId = groupEl.dataset.groupId;
+            const group = state.groups.find(g => g.id === groupId);
+            if (group) {
+                group.order = index;
+            }
+        });
+    }
+
+    /**
+     * Update button count badge for a group
+     */
+    function updateGroupButtonCount(groupEl) {
+        const count = groupEl.querySelectorAll('.button-chip').length;
+        const badge = groupEl.querySelector('.group-button-count');
+        if (badge) {
+            badge.textContent = `${count} button${count !== 1 ? 's' : ''}`;
+        } else {
+            // Fallback for old badge structure
+            const oldBadge = groupEl.querySelector('.badge.bg-secondary');
+            if (oldBadge) {
+                oldBadge.textContent = `${count} button${count !== 1 ? 's' : ''}`;
+            }
+        }
+    }
+
+    /**
+     * Update "in use" indicators in palette
+     */
+    function updateButtonUsageIndicators() {
+        // Get all button types currently in use
+        const usedButtonTypes = new Set();
+        document.querySelectorAll('.button-chip').forEach(chip => {
+            usedButtonTypes.add(chip.dataset.buttonType);
+        });
+
+        // Update palette items
+        document.querySelectorAll('.button-palette-item').forEach(item => {
+            const buttonType = item.dataset.buttonType;
+            const isUsed = usedButtonTypes.has(buttonType);
+
+            if (isUsed) {
+                item.classList.add('in-use');
+                const indicator = item.querySelector('.in-use-indicator');
+                if (indicator) {
+                    indicator.style.display = 'inline-block';
+                }
+            } else {
+                item.classList.remove('in-use');
+                const indicator = item.querySelector('.in-use-indicator');
+                if (indicator) {
+                    indicator.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    /**
+     * Sync current UI state to hidden form inputs for ASP.NET model binding
+     */
+    function syncStateToDOM() {
+        const toolbarGroups = document.getElementById('toolbar-groups');
+        const groups = toolbarGroups.querySelectorAll('.toolbar-group');
+
+        groups.forEach((groupEl, groupIndex) => {
+            const groupId = groupEl.dataset.groupId;
+            const groupNameInput = groupEl.querySelector('.group-name-input');
+            const buttons = groupEl.querySelectorAll('.button-chip');
+
+            // Update group hidden inputs (with prefix)
+            updateOrCreateHiddenInput(groupEl, `${state.prefix}Groups[${groupIndex}].Id`, groupId);
+            updateOrCreateHiddenInput(groupEl, `${state.prefix}Groups[${groupIndex}].Order`, groupIndex);
+
+            // Update group name input's name attribute to match index (with prefix)
+            if (groupNameInput) {
+                groupNameInput.name = `${state.prefix}Groups[${groupIndex}].Name`;
+            }
+
+            // Update button hidden inputs (with prefix)
+            buttons.forEach((buttonChip, buttonIndex) => {
+                const buttonType = buttonChip.dataset.buttonType;
+                const buttonValue = buttonChip.dataset.buttonValue || '';
+
+                // Remove ALL existing hidden inputs from this button chip to avoid duplicates
+                buttonChip.querySelectorAll('input[type="hidden"]').forEach(input => input.remove());
+
+                // Create fresh hidden inputs with correct indices
+                const typeInput = createHiddenInput(`${state.prefix}Groups[${groupIndex}].Buttons[${buttonIndex}].Type`, buttonType);
+                const valueInput = createHiddenInput(`${state.prefix}Groups[${groupIndex}].Buttons[${buttonIndex}].Value`, buttonValue);
+                const orderInput = createHiddenInput(`${state.prefix}Groups[${groupIndex}].Buttons[${buttonIndex}].Order`, buttonIndex);
+
+                buttonChip.appendChild(typeInput);
+                buttonChip.appendChild(valueInput);
+                buttonChip.appendChild(orderInput);
+            });
+
+            // Update button count
+            updateGroupButtonCount(groupEl);
+        });
+    }
+
+    /**
+     * Update existing hidden input or create new one if it doesn't exist
+     */
+    function updateOrCreateHiddenInput(parentEl, name, value) {
+        let input = parentEl.querySelector(`input[type="hidden"][name="${name}"]`);
+
+        if (input) {
+            // Update existing input (use != null to allow 0 and empty string)
+            input.value = value != null ? String(value) : '';
+        } else {
+            // Create new input
+            input = createHiddenInput(name, value);
+            parentEl.appendChild(input);
+        }
+
+        return input;
+    }
+
+    /**
+     * Create hidden input element
+     */
+    function createHiddenInput(name, value) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value != null ? String(value) : '';
+        return input;
+    }
+
+    /**
+     * Initialize color palette (existing functionality from Phase 4)
+     */
+    function initializeColorPalette() {
+        const colorList = document.getElementById('color-list');
+        const addColorBtn = document.getElementById('add-color-btn');
+        const newColorInput = document.getElementById('new-color-input');
+
+        if (addColorBtn) {
+            addColorBtn.addEventListener('click', function () {
+                const color = newColorInput.value;
+                addColorToList(color);
+            });
+        }
+
+        // Remove color handler (event delegation)
+        colorList?.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-color-btn')) {
+                e.target.closest('.color-item').remove();
+                reindexColors();
+            }
+        });
+
+        function addColorToList(color) {
+            const currentIndex = colorList.querySelectorAll('.color-item').length;
+            const colorItem = document.createElement('div');
+            colorItem.className = 'color-item d-inline-flex align-items-center bg-white border rounded-pill px-2 py-1';
+            colorItem.setAttribute('data-color', color);
+
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = `${state.prefix}CustomColors[${currentIndex}]`;
+            hiddenInput.value = color;
+
+            const preview = document.createElement('div');
+            preview.className = 'color-preview me-2 rounded-circle';
+            preview.style.cssText = `width: 24px; height: 24px; background-color: ${color}; border: 2px solid #fff;`;
+
+            const colorText = document.createElement('span');
+            colorText.className = 'me-2 font-monospace small';
+            colorText.textContent = color;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn-close btn-close-sm remove-color-btn';
+            removeBtn.style.fontSize = '0.6rem';
+
+            colorItem.appendChild(hiddenInput);
+            colorItem.appendChild(preview);
+            colorItem.appendChild(colorText);
+            colorItem.appendChild(removeBtn);
+            colorList.appendChild(colorItem);
+
+            document.getElementById('empty-color-state')?.remove();
+        }
+
+        function reindexColors() {
+            const colorItems = colorList.querySelectorAll('.color-item');
+            colorItems.forEach((item, index) => {
+                const input = item.querySelector('input[type="hidden"]');
+                input.name = `${state.prefix}CustomColors[${index}]`;
+            });
+        }
+    }
+
+    /**
+     * Initialize preset buttons (Minimal, Standard, Full)
+     */
+    function initializePresetButtons() {
+        document.querySelectorAll('.load-preset').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const preset = this.dataset.preset;
+                loadPreset(preset);
+            });
+        });
+    }
+
+    /**
+     * Load a toolbar preset
+     */
+    function loadPreset(presetName) {
+        // Clear existing groups
+        const toolbarGroups = document.getElementById('toolbar-groups');
+        toolbarGroups.innerHTML = '';
+
+        // Reset state
+        state.groups = [];
+        state.nextGroupId = 1;
+
+        // Define presets
+        const presets = {
+            minimal: [
+                { name: 'Basic', buttons: ['bold', 'italic', 'link'] }
+            ],
+            standard: [
+                { name: 'Formatting', buttons: ['bold', 'italic', 'underline', 'strike'] },
+                { name: 'Blocks', buttons: ['blockquote', 'code-block'] },
+                { name: 'Lists', buttons: ['list'] },
+                { name: 'Media', buttons: ['link', 'image', 'video'] },
+                { name: 'Advanced', buttons: ['clean'] }
+            ],
+            full: [
+                { name: 'Text Style', buttons: ['bold', 'italic', 'underline', 'strike', 'code'] },
+                { name: 'Color', buttons: ['color', 'background'] },
+                { name: 'Structure', buttons: ['header', 'blockquote', 'code-block'] },
+                { name: 'Lists & Align', buttons: ['list', 'align'] },
+                { name: 'Advanced', buttons: ['script', 'indent', 'direction'] },
+                { name: 'Media', buttons: ['link', 'image', 'video', 'formula'] },
+                { name: 'Utilities', buttons: ['clean'] }
+            ]
+        };
+
+        const preset = presets[presetName];
+        if (!preset) {
+            return;
+        }
+
+        // Create groups from preset
+        preset.forEach((groupDef, index) => {
+            const groupId = `group-${Date.now()}-${state.nextGroupId++}`;
+
+            const groupEl = document.createElement('div');
+            groupEl.className = 'toolbar-group card mb-3';
+            groupEl.dataset.groupId = groupId;
+
+            groupEl.innerHTML = `
+                <input type="hidden" name="${state.prefix}Groups[${index}].Id" value="${groupId}" />
+                <input type="hidden" name="${state.prefix}Groups[${index}].Order" value="${index}" />
+                <div class="card-header d-flex align-items-center">
+                    <span class="group-drag-handle me-2" style="cursor: grab;">
+                        <i class="fa-solid fa-grip-vertical text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control form-control-sm group-name-input"
+                           name="${state.prefix}Groups[${index}].Name"
+                           value="${groupDef.name}" placeholder="Group name (optional)" style="max-width: 200px;" />
+                    <span class="badge bg-secondary ms-2 group-button-count">${groupDef.buttons.length} buttons</span>
+                    <button type="button" class="btn btn-sm btn-link text-danger ms-auto delete-group-btn">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="group-buttons d-flex flex-wrap gap-2"></div>
+                </div>
+            `;
+
+            toolbarGroups.appendChild(groupEl);
+
+            // Add buttons to group
+            const buttonsContainer = groupEl.querySelector('.group-buttons');
+            groupDef.buttons.forEach(buttonType => {
+                const buttonChip = createButtonChip(buttonType, index);
+                if (buttonChip) {
+                    buttonsContainer.appendChild(buttonChip);
+                }
+            });
+
+            // Initialize sortable and event listeners
+            initializeGroupButtons(groupEl);
+            attachGroupEventListeners(groupEl);
+
+            // Update state
+            state.groups.push({
+                id: groupId,
+                name: groupDef.name,
+                order: index,
+                buttons: groupDef.buttons.map(type => ({ type }))
+            });
+        });
+
+        // Update UI
+        updateButtonUsageIndicators();
+        syncStateToDOM();
+    }
+
+    /**
+     * Initialize button search functionality
+     */
+    function initializeButtonSearch() {
+        const searchInput = document.getElementById('button-search');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', function () {
+            const query = this.value.toLowerCase().trim();
+            const paletteItems = document.querySelectorAll('.button-palette-item');
+            const accordion = document.getElementById('button-palette');
+            const emptyState = document.getElementById('search-empty-state');
+            let hasVisibleResults = false;
+
+            if (query === '') {
+                // Show all items and restore accordion state
+                paletteItems.forEach(item => item.style.display = '');
+                accordion.querySelectorAll('.accordion-collapse').forEach((collapse, index) => {
+                    if (index === 0) {
+                        collapse.classList.add('show');
+                    } else {
+                        collapse.classList.remove('show');
+                    }
+                });
+                if (emptyState) emptyState.style.display = 'none';
+                return;
+            }
+
+            // Filter items by search query
+            paletteItems.forEach(item => {
+                const label = item.querySelector('.button-label')?.textContent.toLowerCase() || '';
+                const category = item.dataset.buttonCategory?.toLowerCase() || '';
+                const matches = label.includes(query) || category.includes(query);
+
+                item.style.display = matches ? '' : 'none';
+                if (matches) hasVisibleResults = true;
+            });
+
+            // Show/hide categories based on visible items
+            accordion.querySelectorAll('.accordion-item').forEach(accordionItem => {
+                const body = accordionItem.querySelector('.accordion-body');
+                const visibleItems = body.querySelectorAll('.button-palette-item:not([style*="display: none"])');
+
+                if (visibleItems.length > 0) {
+                    accordionItem.style.display = '';
+                    accordionItem.querySelector('.accordion-collapse')?.classList.add('show');
+                } else {
+                    accordionItem.style.display = 'none';
+                }
+            });
+
+            // Show/hide empty state
+            if (emptyState) {
+                emptyState.style.display = hasVisibleResults ? 'none' : 'block';
+            }
+        });
+    }
+
+})();
