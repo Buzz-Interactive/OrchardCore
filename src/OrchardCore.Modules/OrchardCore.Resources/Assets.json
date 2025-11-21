@@ -516,6 +516,12 @@
   {
     "action": "copy",
     "name": "contentfields",
+    "source": "Assets/quill/quill.snow.css",
+    "tags": [ "admin", "dashboard", "css" ]
+  },
+  {
+    "action": "copy",
+    "name": "contentfields",
     "source": "Assets/quill/quill.core.css",
     "tags": [ "admin", "dashboard", "css" ]
   },
