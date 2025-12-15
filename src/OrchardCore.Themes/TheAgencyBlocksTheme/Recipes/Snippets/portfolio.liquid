@@ -1,0 +1,29 @@
+{% if Model.ContentItem.Content.Items.ContentItems.size > 0 %}
+<!-- Portfolio Grid -->
+<section class="page-section bg-light" id="portfolio">
+    <div class="container">
+        <div class="text-center">
+            <h2 class="section-heading text-uppercase">{{ Model.ContentItem | display_text }}</h2>
+            <h3 class="section-subheading text-muted">{{ Model.ContentItem.Content.Portfolio.Subheading.Text }}</h3>
+        </div>
+        <div class="row">
+            {% for project in Model.ContentItem.Content.Items.ContentItems %}
+            <div class="col-lg-4 col-sm-6 mb-4">
+                <div class="portfolio-item">
+                    <a class="portfolio-link" data-bs-toggle="modal" href="#portfolioModal{{ Model.ContentItem.ContentItemId }}_{{ forloop.index }}">
+                        <div class="portfolio-hover">
+                            <div class="portfolio-hover-content"><i class="fas fa-plus fa-3x"></i></div>
+                        </div>
+                        <img class="img-fluid" src="{{ project.Project.Image.Paths.first | asset_url | resize_url: profile: 'medium', mode: 'stretch' }}" alt="{{ project.DisplayText }}" />
+                    </a>
+                    <div class="portfolio-caption">
+                        <div class="portfolio-caption-heading">{{ project.DisplayText }}</div>
+                        <div class="portfolio-caption-subheading text-muted">{{ project.Project.Category.Text }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}

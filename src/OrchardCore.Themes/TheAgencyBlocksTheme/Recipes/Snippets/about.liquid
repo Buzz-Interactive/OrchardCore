@@ -1,0 +1,38 @@
+{% if Model.ContentItem.Content.Items.ContentItems.size > 0 %}
+<!-- About -->
+<section class="page-section" id="about">
+    <div class="container">
+        <div class="text-center">
+            <h2 class="section-heading text-uppercase">{{ Model.ContentItem | display_text }}</h2>
+            <h3 class="section-subheading text-muted">{{ Model.ContentItem.Content.About.Subheading.Text }}</h3>
+        </div>
+        <ul class="timeline">
+            {% for milestone in Model.ContentItem.Content.Items.ContentItems %}
+            <li class="{% cycle '', 'timeline-inverted' %}">
+                <div class="timeline-image">
+                    <img class="rounded-circle img-fluid" src="{{ milestone.Milestone.Image.Paths.first | asset_url | resize_url: profile: 'extrasmall', mode: 'stretch' }}" alt="">
+                </div>
+                <div class="timeline-panel">
+                    <div class="timeline-heading">
+                        <h4>{{ milestone.Milestone.Date.Text }}</h4>
+                        <h4 class="subheading">{{ milestone.DisplayText }}</h4>
+                    </div>
+                    <div class="timeline-body">
+                        <p class="text-muted">{{ milestone.HtmlBodyPart.Html | raw }}</p>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+            <li class="timeline-inverted">
+                <div class="timeline-image">
+                    <h4>
+                        Be Part
+                        <br>Of Our
+                        <br>Story!
+                    </h4>
+                </div>
+            </li>
+        </ul>
+    </div>
+</section>
+{% endif %}
