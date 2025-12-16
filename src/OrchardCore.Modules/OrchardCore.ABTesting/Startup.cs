@@ -13,6 +13,7 @@ using OrchardCore.ContentManagement.Handlers;
 using OrchardCore.Data;
 using OrchardCore.Data.Migration;
 using OrchardCore.Modules;
+using OrchardCore.Navigation;
 using OrchardCore.Security.Permissions;
 
 namespace OrchardCore.ABTesting;
@@ -41,6 +42,9 @@ public sealed class Startup : StartupBase
 
         // Register permissions
         services.AddPermissionProvider<Permissions>();
+
+        // Register admin menu
+        services.AddNavigationProvider<AdminMenu>();
     }
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
