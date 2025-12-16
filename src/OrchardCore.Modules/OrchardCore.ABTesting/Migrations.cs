@@ -46,10 +46,6 @@ public sealed class Migrations : DataMigration
 
         // Create the ABTest content type
         await _contentDefinitionManager.AlterTypeDefinitionAsync("ABTest", type => type
-            .Draftable()
-            .Versionable()
-            .Creatable()
-            .Listable()
             .DisplayedAs("AB Test")
             .WithDescription("An A/B test that compares two content variants.")
             .WithPart("TitlePart", part => part
