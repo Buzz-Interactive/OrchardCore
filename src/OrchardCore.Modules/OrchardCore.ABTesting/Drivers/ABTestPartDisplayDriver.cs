@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Localization;
 using OrchardCore.ABTesting.Models;
+using OrchardCore.ABTesting.Services;
 using OrchardCore.ABTesting.ViewModels;
 using OrchardCore.ContentFields.Fields;
 using OrchardCore.ContentManagement;
@@ -12,14 +13,17 @@ namespace OrchardCore.ABTesting.Drivers;
 public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPart>
 {
     private readonly IContentManager _contentManager;
+    private readonly IImpressionService _impressionService;
 
     internal readonly IStringLocalizer S;
 
     public ABTestPartDisplayDriver(
         IContentManager contentManager,
+        IImpressionService impressionService,
         IStringLocalizer<ABTestPartDisplayDriver> localizer)
     {
         _contentManager = contentManager;
+        _impressionService = impressionService;
         S = localizer;
     }
 
@@ -67,6 +71,11 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         model.PercentageA = part.PercentageA;
         model.IsActive = part.IsActive;
         model.ABTestPart = part;
+
+        // Get total impressions
+        var contentItemId = part.ContentItem.ContentItemId;
+        var (variantAImpressions, variantBImpressions) = await _impressionService.GetImpressionsAsync(contentItemId);
+        model.TotalImpressions = variantAImpressions + variantBImpressions;
 
         // Get display text for variants
         var variantAField = part.Get<ContentPickerField>("VariantA");

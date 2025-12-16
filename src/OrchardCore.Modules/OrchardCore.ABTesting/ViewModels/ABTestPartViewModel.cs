@@ -37,4 +37,10 @@ public class ABTestPartViewModel
     /// </summary>
     [BindNever]
     public ABTestPart ABTestPart { get; set; }
+
+    /// <summary>
+    /// Total impressions across both variants.
+    /// </summary>
+    [BindNever]
+    public long TotalImpressions { get; set; }
 }

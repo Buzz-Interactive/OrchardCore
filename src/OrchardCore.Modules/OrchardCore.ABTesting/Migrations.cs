@@ -97,4 +97,23 @@ public sealed class Migrations : DataMigration
 
         return 1;
     }
+
+    public async Task<int> UpdateFrom1Async()
+    {
+        // Create the impression tracking table
+        await SchemaBuilder.CreateTableAsync("ABTestImpressionRecord", table => table
+            .Column<int>("Id", col => col.PrimaryKey().Identity())
+            .Column<string>("TestContentItemId", col => col.WithLength(26))
+            .Column<long>("VariantAImpressions", col => col.WithDefault(0))
+            .Column<long>("VariantBImpressions", col => col.WithDefault(0))
+        );
+
+        // Create unique index on TestContentItemId for fast lookups
+        await SchemaBuilder.AlterTableAsync("ABTestImpressionRecord", table => table
+            .CreateIndex("IDX_ABTestImpressionRecord_TestContentItemId",
+                "TestContentItemId")
+        );
+
+        return 2;
+    }
 }

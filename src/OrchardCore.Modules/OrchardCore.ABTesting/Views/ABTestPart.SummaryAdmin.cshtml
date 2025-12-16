@@ -1,0 +1,14 @@
+@model ABTestPartViewModel
+
+@if (Model.IsActive)
+{
+    <span class="badge ta-badge">@T["Active"]</span>
+}
+else
+{
+    <span class="badge ta-badge">@T["Inactive"]</span>
+}
+
+<span class="badge ta-badge">@T["A: {0}% / B: {1}%", Model.PercentageA, Model.PercentageB]</span>
+<span class="badge ta-badge">@T["{0} impressions", Model.TotalImpressions]</span>
+

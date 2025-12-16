@@ -1,0 +1,10 @@
+@{
+    ViewLayout = "Layout";
+    ViewData["Title"] = T["A/B Test Results: {0}", Model.TestName];
+}
+
+<zone Name="Title">
+    <h1>@RenderTitleSegments(T["{0} Test Results", Model.TestName])</h1>
+</zone>
+
+@await DisplayAsync(Model)

@@ -1,0 +1,10 @@
+@using OrchardCore.ContentManagement.Display.ViewModels
+@model ContentItemViewModel
+
+@{
+    var contentItem = Model.ContentItem;
+}
+
+<a asp-action="Results" asp-controller="Admin" asp-route-area="OrchardCore.ABTesting"
+   asp-route-contentItemId="@contentItem.ContentItemId"
+   class="dropdown-item btn-sm">@T["View Results"]</a>

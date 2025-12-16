@@ -1,0 +1,96 @@
+@{
+    string testName = Model.TestName;
+    string testContentItemId = Model.TestContentItemId;
+    int targetPercentageA = Model.TargetPercentageA;
+    int targetPercentageB = Model.TargetPercentageB;
+    bool isActive = Model.IsActive;
+    string variantAName = Model.VariantAName;
+    string variantAContentItemId = Model.VariantAContentItemId;
+    long variantAImpressions = Model.VariantAImpressions;
+    double variantAPercentage = Model.VariantAPercentage;
+    string variantBName = Model.VariantBName;
+    string variantBContentItemId = Model.VariantBContentItemId;
+    long variantBImpressions = Model.VariantBImpressions;
+    double variantBPercentage = Model.VariantBPercentage;
+    long totalImpressions = Model.TotalImpressions;
+}
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h6 class="text-muted">@T["Target Traffic Split"]</h6>
+        <p class="h4">@T["A: {0}% / B: {1}%", targetPercentageA, targetPercentageB]</p>
+    </div>
+    <div class="col-md-6">
+        <h6 class="text-muted">@T["Total Impressions"]</h6>
+        <p class="h4">@totalImpressions.ToString("N0")</p>
+    </div>
+</div>
+
+@if (totalImpressions == 0)
+{
+    <div class="alert alert-info">
+        @T["No impressions have been recorded yet. Impressions are tracked when visitors view pages that are part of this A/B test."]
+    </div>
+}
+else
+{
+    <h6 class="text-muted mb-3">@T["Actual Distribution"]</h6>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-primary mb-3">
+                <div class="card-header bg-primary text-white">
+                    <strong>@T["Variant A"]</strong>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">
+                        <strong>@variantAName</strong>
+                        @if (!string.IsNullOrEmpty(variantAContentItemId))
+                        {
+                            <a asp-route-area="OrchardCore.Contents" asp-controller="Admin" asp-action="Edit" asp-route-contentItemId="@variantAContentItemId" class="ms-2 small">
+                                <i class="fa-solid fa-edit" aria-hidden="true"></i> @T["Edit"]
+                            </a>
+                        }
+                    </p>
+                    <h3 class="mb-0">@variantAImpressions.ToString("N0")</h3>
+                    <small class="text-muted">@T["impressions"]</small>
+                    <div class="progress mt-3" style="height: 25px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: @variantAPercentage%;" aria-valuenow="@variantAPercentage" aria-valuemin="0" aria-valuemax="100">
+                            @variantAPercentage%
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        @T["Actual: {0}% (Target: {1}%)", variantAPercentage, targetPercentageA]
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-success mb-3">
+                <div class="card-header bg-success text-white">
+                    <strong>@T["Variant B"]</strong>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">
+                        <strong>@variantBName</strong>
+                        @if (!string.IsNullOrEmpty(variantBContentItemId))
+                        {
+                            <a asp-route-area="OrchardCore.Contents" asp-controller="Admin" asp-action="Edit" asp-route-contentItemId="@variantBContentItemId" class="ms-2 small">
+                                <i class="fa-solid fa-edit" aria-hidden="true"></i> @T["Edit"]
+                            </a>
+                        }
+                    </p>
+                    <h3 class="mb-0">@variantBImpressions.ToString("N0")</h3>
+                    <small class="text-muted">@T["impressions"]</small>
+                    <div class="progress mt-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: @variantBPercentage%;" aria-valuenow="@variantBPercentage" aria-valuemin="0" aria-valuemax="100">
+                            @variantBPercentage%
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        @T["Actual: {0}% (Target: {1}%)", variantBPercentage, targetPercentageB]
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+}

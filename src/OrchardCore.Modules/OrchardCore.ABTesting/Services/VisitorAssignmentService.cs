@@ -24,6 +24,7 @@ internal static class SessionExtensions
 /// <summary>
 /// Service for assigning visitors to A/B test variants.
 /// Uses cookies for persistent storage with GDPR-compliant fallback to session storage.
+/// Balances variant selection based on impression counts.
 /// </summary>
 public class VisitorAssignmentService : IVisitorAssignmentService
 {
@@ -31,36 +32,43 @@ public class VisitorAssignmentService : IVisitorAssignmentService
     private const string SessionKey = "ABTesting_Assignments";
 
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IImpressionService _impressionService;
 
-    public VisitorAssignmentService(IHttpContextAccessor httpContextAccessor)
+    public VisitorAssignmentService(
+        IHttpContextAccessor httpContextAccessor,
+        IImpressionService impressionService)
     {
         _httpContextAccessor = httpContextAccessor;
+        _impressionService = impressionService;
     }
 
     /// <inheritdoc />
-    public Task<ABVariant> GetOrAssignVariantAsync(string testContentItemId, int percentageA)
+    public async Task<ABVariant> GetOrAssignVariantAsync(string testContentItemId, int percentageA)
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext == null)
         {
             // No HTTP context - use random selection without persistence
-            return Task.FromResult(SelectVariantByPercentage(percentageA));
+            return SelectVariantByPercentage(percentageA);
         }
 
         // Check for existing assignment
         var existingAssignment = TryGetAssignmentFromStorage(testContentItemId);
         if (existingAssignment.HasValue)
         {
-            return Task.FromResult(existingAssignment.Value);
+            return existingAssignment.Value;
         }
 
-        // Select new variant based on percentage
-        var selectedVariant = SelectVariantByPercentage(percentageA);
+        // Get effective percentage based on impression balancing
+        var effectivePercentageA = await GetBalancedPercentageAsync(testContentItemId, percentageA);
+
+        // Select new variant based on balanced percentage
+        var selectedVariant = SelectVariantByPercentage(effectivePercentageA);
 
         // Store assignment
         StoreAssignment(testContentItemId, selectedVariant);
 
-        return Task.FromResult(selectedVariant);
+        return selectedVariant;
     }
 
     /// <inheritdoc />
@@ -219,5 +227,38 @@ public class VisitorAssignmentService : IVisitorAssignmentService
         // Select variant based on percentage
         // If percentageA is 70, random < 70 returns A, otherwise B
         return random < percentageA ? ABVariant.A : ABVariant.B;
+    }
+
+    /// <summary>
+    /// Calculates the effective percentage for Variant A based on current impressions.
+    /// Adjusts the target percentage to balance impression counts.
+    /// </summary>
+    private async Task<int> GetBalancedPercentageAsync(string testContentItemId, int targetPercentageA)
+    {
+        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(testContentItemId);
+        var totalImpressions = impressionsA + impressionsB;
+
+        // If no impressions yet, use the target percentage
+        if (totalImpressions == 0)
+        {
+            return targetPercentageA;
+        }
+
+        // Calculate the target ratio (what we want)
+        var targetRatio = targetPercentageA / 100.0;
+
+        // Calculate the actual ratio (what we have)
+        var actualRatio = impressionsA / (double)totalImpressions;
+
+        // Calculate imbalance (positive = A is under-represented, negative = A is over-represented)
+        var imbalance = targetRatio - actualRatio;
+
+        // Adjust effective percentage to correct imbalance
+        // Multiply imbalance by a correction factor (50) to accelerate balancing
+        // This means if A is 10% under target, we increase its effective % by 5
+        var effectivePercentageA = targetPercentageA + (int)(imbalance * 50);
+
+        // Clamp to valid range (5-95 to always give some chance to both variants)
+        return Math.Clamp(effectivePercentageA, 5, 95);
     }
 }

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.ABTesting.Drivers;
+using OrchardCore.ABTesting.Filters;
 using OrchardCore.ABTesting.Handlers;
 using OrchardCore.ABTesting.Indexes;
 using OrchardCore.ABTesting.Middleware;
@@ -29,8 +31,18 @@ public sealed class Startup : StartupBase
 
         // Register services
         services.AddScoped<IABTestLookupService, ABTestLookupService>();
+        services.AddScoped<IImpressionService, ImpressionService>();
         services.AddScoped<IVisitorAssignmentService, VisitorAssignmentService>();
         services.AddScoped<IABTestContentResolver, ABTestContentResolver>();
+
+        // Register display driver for results action menu
+        services.AddScoped<IContentDisplayDriver, ABTestResultsDisplayDriver>();
+
+        // Register the tracking filter
+        services.Configure<MvcOptions>(options =>
+        {
+            options.Filters.Add<ABTestTrackingFilter>();
+        });
 
         // Register the index provider
         services.AddScoped<ABTestIndexProvider>();
