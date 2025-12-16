@@ -37,6 +37,7 @@
     <!--
       When adding a reference to this list, please keep it ordered alphabetically, and set PrivateAssets="none"
     -->
+    <ProjectReference Include="..\..\OrchardCore.Modules\OrchardCore.ABTesting\OrchardCore.ABTesting.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\..\OrchardCore.Modules\OrchardCore.Admin\OrchardCore.Admin.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\..\OrchardCore.Modules\OrchardCore.AdminDashboard\OrchardCore.AdminDashboard.csproj" PrivateAssets="none" />
     <ProjectReference Include="..\..\OrchardCore.Modules\OrchardCore.AdminMenu\OrchardCore.AdminMenu.csproj" PrivateAssets="none" />
