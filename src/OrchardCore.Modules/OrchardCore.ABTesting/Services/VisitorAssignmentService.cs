@@ -30,6 +30,7 @@ public class VisitorAssignmentService : IVisitorAssignmentService
 {
     private const string CookieName = ".OrchardCore.ABTesting.Assignments";
     private const string SessionKey = "ABTesting_Assignments";
+    private const string HttpContextItemsKey = "ABTesting_CurrentRequestAssignments";
 
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IImpressionService _impressionService;
@@ -109,6 +110,16 @@ public class VisitorAssignmentService : IVisitorAssignmentService
 
     private ABVariant? TryGetAssignmentFromStorage(string testContentItemId)
     {
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        // First check HttpContext.Items for assignments made during this request
+        // This handles the case where assignment was just made but cookie isn't available yet
+        if (httpContext?.Items[HttpContextItemsKey] is Dictionary<string, ABVariant> currentRequestAssignments &&
+            currentRequestAssignments.TryGetValue(testContentItemId, out var currentRequestVariant))
+        {
+            return currentRequestVariant;
+        }
+
         var assignments = GetAssignments();
         if (assignments.TryGetValue(testContentItemId, out var variantString))
         {
@@ -174,6 +185,16 @@ public class VisitorAssignmentService : IVisitorAssignmentService
         {
             return;
         }
+
+        // Store in HttpContext.Items for immediate access within this request
+        // This ensures the tracking filter can access the assignment even though
+        // cookies won't be available until the next request
+        if (httpContext.Items[HttpContextItemsKey] is not Dictionary<string, ABVariant> currentRequestAssignments)
+        {
+            currentRequestAssignments = new Dictionary<string, ABVariant>();
+            httpContext.Items[HttpContextItemsKey] = currentRequestAssignments;
+        }
+        currentRequestAssignments[testContentItemId] = variant;
 
         var assignments = GetAssignments();
         assignments[testContentItemId] = variant.ToString();
