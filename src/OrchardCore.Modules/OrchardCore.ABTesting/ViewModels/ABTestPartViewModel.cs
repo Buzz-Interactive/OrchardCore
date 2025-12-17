@@ -97,6 +97,13 @@ public class ABTestPartViewModel
     /// </summary>
     [BindNever]
     public long TotalConversions { get; set; }
+
+    /// <summary>
+    /// Indicates whether goal fields are locked and cannot be edited.
+    /// Goals are locked once the test has been published AND has recorded impressions.
+    /// </summary>
+    [BindNever]
+    public bool AreGoalsLocked { get; set; }
 }
 
 /// <summary>

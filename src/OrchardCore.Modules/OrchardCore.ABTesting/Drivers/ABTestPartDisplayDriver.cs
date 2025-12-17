@@ -69,6 +69,40 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
             m => m.GoalScrollPercentage,
             m => m.GoalEventName);
 
+        // Check if goals are locked (published + has impressions)
+        var contentItemId = part.ContentItem.ContentItemId;
+        var (variantAImpressions, variantBImpressions) = await _impressionService.GetImpressionsAsync(contentItemId);
+        var totalImpressions = variantAImpressions + variantBImpressions;
+        var areGoalsLocked = part.ContentItem.Published && totalImpressions > 0;
+
+        if (areGoalsLocked)
+        {
+            // Check if any goal field was changed and add validation errors
+            if (viewModel.GoalType != part.GoalType)
+            {
+                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalType),
+                    S["Goal type cannot be changed after the test has started tracking impressions."]);
+            }
+
+            if (viewModel.GoalSelector != part.GoalSelector)
+            {
+                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalSelector),
+                    S["Goal selector cannot be changed after the test has started tracking impressions."]);
+            }
+
+            if (viewModel.GoalScrollPercentage != part.GoalScrollPercentage)
+            {
+                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalScrollPercentage),
+                    S["Scroll percentage cannot be changed after the test has started tracking impressions."]);
+            }
+
+            if (viewModel.GoalEventName != part.GoalEventName)
+            {
+                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalEventName),
+                    S["Event name cannot be changed after the test has started tracking impressions."]);
+            }
+        }
+
         // Validate percentage range
         if (viewModel.PercentageA < 0 || viewModel.PercentageA > 100)
         {
@@ -97,31 +131,34 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
                 S["End date must be after start date."]);
         }
 
-        // Validate goal configuration
-        if (viewModel.GoalType == GoalType.ButtonLinkClick || viewModel.GoalType == GoalType.FormSubmission)
+        // Validate goal configuration only if goals are not locked
+        if (!areGoalsLocked)
         {
-            if (string.IsNullOrWhiteSpace(viewModel.GoalSelector))
+            if (viewModel.GoalType == GoalType.ButtonLinkClick || viewModel.GoalType == GoalType.FormSubmission)
             {
-                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalSelector),
-                    S["CSS selector is required for this goal type."]);
+                if (string.IsNullOrWhiteSpace(viewModel.GoalSelector))
+                {
+                    context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalSelector),
+                        S["CSS selector is required for this goal type."]);
+                }
             }
-        }
 
-        if (viewModel.GoalType == GoalType.ScrollPercentage)
-        {
-            if (viewModel.GoalScrollPercentage < 0 || viewModel.GoalScrollPercentage > 100)
+            if (viewModel.GoalType == GoalType.ScrollPercentage)
             {
-                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalScrollPercentage),
-                    S["Scroll percentage must be between 0 and 100."]);
+                if (viewModel.GoalScrollPercentage < 0 || viewModel.GoalScrollPercentage > 100)
+                {
+                    context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalScrollPercentage),
+                        S["Scroll percentage must be between 0 and 100."]);
+                }
             }
-        }
 
-        if (viewModel.GoalType == GoalType.CustomEvent)
-        {
-            if (string.IsNullOrWhiteSpace(viewModel.GoalEventName))
+            if (viewModel.GoalType == GoalType.CustomEvent)
             {
-                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalEventName),
-                    S["Event name is required for custom event goals."]);
+                if (string.IsNullOrWhiteSpace(viewModel.GoalEventName))
+                {
+                    context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalEventName),
+                        S["Event name is required for custom event goals."]);
+                }
             }
         }
 
@@ -129,10 +166,15 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         part.IsActive = viewModel.IsActive;
         part.ScheduledStartUtc = scheduledStartUtc;
         part.ScheduledEndUtc = scheduledEndUtc;
-        part.GoalType = viewModel.GoalType;
-        part.GoalSelector = viewModel.GoalSelector;
-        part.GoalScrollPercentage = viewModel.GoalScrollPercentage;
-        part.GoalEventName = viewModel.GoalEventName;
+
+        // Only update goal fields if not locked
+        if (!areGoalsLocked)
+        {
+            part.GoalType = viewModel.GoalType;
+            part.GoalSelector = viewModel.GoalSelector;
+            part.GoalScrollPercentage = viewModel.GoalScrollPercentage;
+            part.GoalEventName = viewModel.GoalEventName;
+        }
 
         return Edit(part, context);
     }
@@ -165,6 +207,10 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
 
         var (variantAConversions, variantBConversions) = await _goalService.GetConversionsAsync(contentItemId);
         model.TotalConversions = variantAConversions + variantBConversions;
+
+        // Determine if goal fields should be locked
+        // Goals are locked when: Published AND has impressions
+        model.AreGoalsLocked = part.ContentItem.Published && model.TotalImpressions > 0;
 
         // Populate goal properties
         model.GoalType = part.GoalType;
