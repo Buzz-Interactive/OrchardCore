@@ -1,3 +1,4 @@
+@using OrchardCore.ABTesting.Models
 @{
     string testName = Model.TestName;
     string testContentItemId = Model.TestContentItemId;
@@ -13,17 +14,38 @@
     long variantBImpressions = Model.VariantBImpressions;
     double variantBPercentage = Model.VariantBPercentage;
     long totalImpressions = Model.TotalImpressions;
+
+    // Goal-related data
+    GoalType goalType = Model.GoalType;
+    string goalDisplayName = Model.GoalDisplayName;
+    long variantAConversions = Model.VariantAConversions;
+    long variantBConversions = Model.VariantBConversions;
+    double variantAConversionRate = Model.VariantAConversionRate;
+    double variantBConversionRate = Model.VariantBConversionRate;
+    long totalConversions = Model.TotalConversions;
+    bool hasGoal = goalType != GoalType.None;
 }
 
 <div class="row mb-4">
-    <div class="col-md-6">
+    <div class="col-md-3">
         <h6 class="text-muted">@T["Target Traffic Split"]</h6>
         <p class="h4">@T["A: {0}% / B: {1}%", targetPercentageA, targetPercentageB]</p>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-3">
         <h6 class="text-muted">@T["Total Impressions"]</h6>
         <p class="h4">@totalImpressions.ToString("N0")</p>
     </div>
+    @if (hasGoal)
+    {
+        <div class="col-md-3">
+            <h6 class="text-muted">@T["Goal"]</h6>
+            <p class="h4">@goalDisplayName</p>
+        </div>
+        <div class="col-md-3">
+            <h6 class="text-muted">@T["Total Conversions"]</h6>
+            <p class="h4">@totalConversions.ToString("N0")</p>
+        </div>
+    }
 </div>
 
 @if (totalImpressions == 0)
@@ -61,6 +83,21 @@ else
                     <small class="text-muted">
                         @T["Actual: {0}% (Target: {1}%)", variantAPercentage, targetPercentageA]
                     </small>
+
+                    @if (hasGoal)
+                    {
+                        <hr />
+                        <h4 class="mb-0">@variantAConversions.ToString("N0")</h4>
+                        <small class="text-muted">@T["conversions"]</small>
+                        <div class="progress mt-2" style="height: 20px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: @(Math.Min(variantAConversionRate * 5, 100))%;" aria-valuenow="@variantAConversionRate" aria-valuemin="0" aria-valuemax="100">
+                                @variantAConversionRate%
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            @T["Conversion Rate: {0}%", variantAConversionRate]
+                        </small>
+                    }
                 </div>
             </div>
         </div>
@@ -89,6 +126,21 @@ else
                     <small class="text-muted">
                         @T["Actual: {0}% (Target: {1}%)", variantBPercentage, targetPercentageB]
                     </small>
+
+                    @if (hasGoal)
+                    {
+                        <hr />
+                        <h4 class="mb-0">@variantBConversions.ToString("N0")</h4>
+                        <small class="text-muted">@T["conversions"]</small>
+                        <div class="progress mt-2" style="height: 20px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: @(Math.Min(variantBConversionRate * 5, 100))%;" aria-valuenow="@variantBConversionRate" aria-valuemin="0" aria-valuemax="100">
+                                @variantBConversionRate%
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            @T["Conversion Rate: {0}%", variantBConversionRate]
+                        </small>
+                    }
                 </div>
             </div>
         </div>

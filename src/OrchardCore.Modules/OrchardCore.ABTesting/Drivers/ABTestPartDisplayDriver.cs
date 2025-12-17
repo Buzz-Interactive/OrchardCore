@@ -15,6 +15,7 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
 {
     private readonly IContentManager _contentManager;
     private readonly IImpressionService _impressionService;
+    private readonly IGoalService _goalService;
     private readonly ILocalClock _localClock;
     private readonly IClock _clock;
 
@@ -23,12 +24,14 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
     public ABTestPartDisplayDriver(
         IContentManager contentManager,
         IImpressionService impressionService,
+        IGoalService goalService,
         ILocalClock localClock,
         IClock clock,
         IStringLocalizer<ABTestPartDisplayDriver> localizer)
     {
         _contentManager = contentManager;
         _impressionService = impressionService;
+        _goalService = goalService;
         _localClock = localClock;
         _clock = clock;
         S = localizer;
@@ -60,7 +63,12 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
             m => m.PercentageA,
             m => m.IsActive,
             m => m.ScheduledStartLocalDateTime,
-            m => m.ScheduledEndLocalDateTime);
+            m => m.ScheduledEndLocalDateTime,
+            m => m.GoalType,
+            m => m.GoalSelector,
+            m => m.GoalScrollPercentage,
+            m => m.GoalEventName,
+            m => m.GoalDisplayName);
 
         // Validate percentage range
         if (viewModel.PercentageA < 0 || viewModel.PercentageA > 100)
@@ -90,10 +98,43 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
                 S["End date must be after start date."]);
         }
 
+        // Validate goal configuration
+        if (viewModel.GoalType == GoalType.ButtonLinkClick || viewModel.GoalType == GoalType.FormSubmission)
+        {
+            if (string.IsNullOrWhiteSpace(viewModel.GoalSelector))
+            {
+                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalSelector),
+                    S["CSS selector is required for this goal type."]);
+            }
+        }
+
+        if (viewModel.GoalType == GoalType.ScrollPercentage)
+        {
+            if (viewModel.GoalScrollPercentage < 0 || viewModel.GoalScrollPercentage > 100)
+            {
+                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalScrollPercentage),
+                    S["Scroll percentage must be between 0 and 100."]);
+            }
+        }
+
+        if (viewModel.GoalType == GoalType.CustomEvent)
+        {
+            if (string.IsNullOrWhiteSpace(viewModel.GoalEventName))
+            {
+                context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.GoalEventName),
+                    S["Event name is required for custom event goals."]);
+            }
+        }
+
         part.PercentageA = Math.Clamp(viewModel.PercentageA, 0, 100);
         part.IsActive = viewModel.IsActive;
         part.ScheduledStartUtc = scheduledStartUtc;
         part.ScheduledEndUtc = scheduledEndUtc;
+        part.GoalType = viewModel.GoalType;
+        part.GoalSelector = viewModel.GoalSelector;
+        part.GoalScrollPercentage = viewModel.GoalScrollPercentage;
+        part.GoalEventName = viewModel.GoalEventName;
+        part.GoalDisplayName = viewModel.GoalDisplayName;
 
         return Edit(part, context);
     }
@@ -119,10 +160,20 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         // Calculate the current status
         model.Status = CalculateStatus(part, _clock.UtcNow);
 
-        // Get total impressions
+        // Get total impressions and conversions
         var contentItemId = part.ContentItem.ContentItemId;
         var (variantAImpressions, variantBImpressions) = await _impressionService.GetImpressionsAsync(contentItemId);
         model.TotalImpressions = variantAImpressions + variantBImpressions;
+
+        var (variantAConversions, variantBConversions) = await _goalService.GetConversionsAsync(contentItemId);
+        model.TotalConversions = variantAConversions + variantBConversions;
+
+        // Populate goal properties
+        model.GoalType = part.GoalType;
+        model.GoalSelector = part.GoalSelector;
+        model.GoalScrollPercentage = part.GoalScrollPercentage;
+        model.GoalEventName = part.GoalEventName;
+        model.GoalDisplayName = part.GoalDisplayName;
 
         // Get display text for variants
         var variantAField = part.Get<ContentPickerField>("VariantA");

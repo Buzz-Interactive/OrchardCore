@@ -50,9 +50,10 @@ public class ABTestLookupService : IABTestLookupService
             return null;
         }
 
-        // Get the test name from the content item
+        // Get the test content item and extract goal properties
         var testContentItem = await _contentManager.GetAsync(index.ABTestContentItemId, VersionOptions.Published);
         var testName = testContentItem?.DisplayText ?? "Unnamed Test";
+        var abTestPart = testContentItem?.As<ABTestPart>();
 
         return new ABTestInfo
         {
@@ -62,6 +63,10 @@ public class ABTestLookupService : IABTestLookupService
             VariantBContentItemId = index.VariantBContentItemId,
             PercentageA = index.PercentageA,
             IsVariantA = index.VariantAContentItemId == contentItemId,
+            GoalType = abTestPart?.GoalType ?? GoalType.None,
+            GoalSelector = abTestPart?.GoalSelector,
+            GoalScrollPercentage = abTestPart?.GoalScrollPercentage ?? 50,
+            GoalEventName = abTestPart?.GoalEventName,
         };
     }
 
@@ -83,6 +88,7 @@ public class ABTestLookupService : IABTestLookupService
         {
             var testContentItem = await _contentManager.GetAsync(index.ABTestContentItemId, VersionOptions.Published);
             var testName = testContentItem?.DisplayText ?? "Unnamed Test";
+            var abTestPart = testContentItem?.As<ABTestPart>();
 
             results.Add(new ABTestInfo
             {
@@ -92,6 +98,10 @@ public class ABTestLookupService : IABTestLookupService
                 VariantBContentItemId = index.VariantBContentItemId,
                 PercentageA = index.PercentageA,
                 IsVariantA = true, // Default, not relevant for listing
+                GoalType = abTestPart?.GoalType ?? GoalType.None,
+                GoalSelector = abTestPart?.GoalSelector,
+                GoalScrollPercentage = abTestPart?.GoalScrollPercentage ?? 50,
+                GoalEventName = abTestPart?.GoalEventName,
             });
         }
 
@@ -117,6 +127,7 @@ public class ABTestLookupService : IABTestLookupService
 
         var testContentItem = await _contentManager.GetAsync(index.ABTestContentItemId, VersionOptions.Published);
         var testName = testContentItem?.DisplayText ?? "Unnamed Test";
+        var abTestPart = testContentItem?.As<ABTestPart>();
 
         return new ABTestInfo
         {
@@ -126,6 +137,10 @@ public class ABTestLookupService : IABTestLookupService
             VariantBContentItemId = index.VariantBContentItemId,
             PercentageA = index.PercentageA,
             IsVariantA = true,
+            GoalType = abTestPart?.GoalType ?? GoalType.None,
+            GoalSelector = abTestPart?.GoalSelector,
+            GoalScrollPercentage = abTestPart?.GoalScrollPercentage ?? 50,
+            GoalEventName = abTestPart?.GoalEventName,
         };
     }
 }

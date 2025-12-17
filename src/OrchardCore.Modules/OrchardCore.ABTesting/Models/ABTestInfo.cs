@@ -37,6 +37,26 @@ public class ABTestInfo
     public bool IsVariantA { get; set; }
 
     /// <summary>
+    /// The type of goal configured for this test.
+    /// </summary>
+    public GoalType GoalType { get; set; }
+
+    /// <summary>
+    /// CSS selector for ButtonLinkClick or FormSubmission goals.
+    /// </summary>
+    public string GoalSelector { get; set; }
+
+    /// <summary>
+    /// Scroll percentage threshold (0-100) for ScrollPercentage goals.
+    /// </summary>
+    public int GoalScrollPercentage { get; set; }
+
+    /// <summary>
+    /// Custom JavaScript event name for CustomEvent goals.
+    /// </summary>
+    public string GoalEventName { get; set; }
+
+    /// <summary>
     /// Gets the ContentItemId of the variant that should be shown to the visitor.
     /// </summary>
     /// <param name="assignedVariant">The variant assigned to the visitor.</param>

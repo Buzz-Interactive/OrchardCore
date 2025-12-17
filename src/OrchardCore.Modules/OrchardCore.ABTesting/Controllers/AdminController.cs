@@ -14,17 +14,20 @@ public class AdminController : Controller
 {
     private readonly IContentManager _contentManager;
     private readonly IImpressionService _impressionService;
+    private readonly IGoalService _goalService;
     private readonly IAuthorizationService _authorizationService;
     private readonly IShapeFactory _shapeFactory;
 
     public AdminController(
         IContentManager contentManager,
         IImpressionService impressionService,
+        IGoalService goalService,
         IAuthorizationService authorizationService,
         IShapeFactory shapeFactory)
     {
         _contentManager = contentManager;
         _impressionService = impressionService;
+        _goalService = goalService;
         _authorizationService = authorizationService;
         _shapeFactory = shapeFactory;
     }
@@ -91,6 +94,23 @@ public class AdminController : Controller
             ? Math.Round((double)variantBImpressions / totalImpressions * 100, 1)
             : 0;
 
+        // Get conversion counts
+        var (variantAConversions, variantBConversions) = await _goalService.GetConversionsAsync(contentItemId);
+        var totalConversions = variantAConversions + variantBConversions;
+
+        // Calculate conversion rates (conversions / impressions)
+        var variantAConversionRate = variantAImpressions > 0
+            ? Math.Round((double)variantAConversions / variantAImpressions * 100, 2)
+            : 0;
+        var variantBConversionRate = variantBImpressions > 0
+            ? Math.Round((double)variantBConversions / variantBImpressions * 100, 2)
+            : 0;
+
+        // Get goal display name
+        var goalDisplayName = !string.IsNullOrEmpty(abTestPart.GoalDisplayName)
+            ? abTestPart.GoalDisplayName
+            : GetDefaultGoalName(abTestPart.GoalType);
+
         // Build shape with all the data
         var shape = await _shapeFactory.New.ABTestResults(
             TestName: contentItem.DisplayText ?? "Unnamed Test",
@@ -106,9 +126,28 @@ public class AdminController : Controller
             VariantBContentItemId: variantBContentItemId,
             VariantBImpressions: variantBImpressions,
             VariantBPercentage: variantBPercentage,
-            TotalImpressions: totalImpressions
+            TotalImpressions: totalImpressions,
+            GoalType: abTestPart.GoalType,
+            GoalDisplayName: goalDisplayName,
+            VariantAConversions: variantAConversions,
+            VariantBConversions: variantBConversions,
+            VariantAConversionRate: variantAConversionRate,
+            VariantBConversionRate: variantBConversionRate,
+            TotalConversions: totalConversions
         );
 
         return View(shape);
+    }
+
+    private static string GetDefaultGoalName(GoalType goalType)
+    {
+        return goalType switch
+        {
+            GoalType.ButtonLinkClick => "Click",
+            GoalType.FormSubmission => "Form Submit",
+            GoalType.ScrollPercentage => "Scroll",
+            GoalType.CustomEvent => "Event",
+            _ => "None"
+        };
     }
 }

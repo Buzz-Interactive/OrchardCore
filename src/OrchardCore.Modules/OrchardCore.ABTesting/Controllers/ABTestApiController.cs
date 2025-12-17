@@ -16,13 +16,16 @@ namespace OrchardCore.ABTesting.Controllers;
 public class ABTestApiController : ControllerBase
 {
     private readonly IImpressionService _impressionService;
+    private readonly IGoalService _goalService;
     private readonly IABTestLookupService _lookupService;
 
     public ABTestApiController(
         IImpressionService impressionService,
+        IGoalService goalService,
         IABTestLookupService lookupService)
     {
         _impressionService = impressionService;
+        _goalService = goalService;
         _lookupService = lookupService;
     }
 
@@ -55,6 +58,39 @@ public class ABTestApiController : ControllerBase
 
         // Record the impression
         await _impressionService.RecordImpressionAsync(model.TestId, variant);
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Records a goal conversion for an A/B test variant.
+    /// </summary>
+    /// <param name="model">The conversion data.</param>
+    /// <returns>OK if successful, NotFound if test doesn't exist.</returns>
+    [HttpPost]
+    [Route("conversion")]
+    public async Task<IActionResult> RecordConversion([FromBody] ConversionModel model)
+    {
+        if (model == null || string.IsNullOrEmpty(model.TestId) || string.IsNullOrEmpty(model.Variant))
+        {
+            return BadRequest();
+        }
+
+        // Validate the test exists
+        var testInfo = await _lookupService.GetTestByIdAsync(model.TestId);
+        if (testInfo == null)
+        {
+            return NotFound();
+        }
+
+        // Parse variant
+        if (!Enum.TryParse<ABVariant>(model.Variant, ignoreCase: true, out var variant))
+        {
+            return BadRequest("Invalid variant. Must be 'A' or 'B'.");
+        }
+
+        // Record the conversion
+        await _goalService.RecordConversionAsync(model.TestId, variant);
 
         return Ok();
     }

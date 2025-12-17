@@ -140,4 +140,23 @@ public sealed class Migrations : DataMigration
 
         return 3;
     }
+
+    public async Task<int> UpdateFrom3Async()
+    {
+        // Create the goal tracking table
+        await SchemaBuilder.CreateTableAsync("ABTestGoalRecord", table => table
+            .Column<int>("Id", col => col.PrimaryKey().Identity())
+            .Column<string>("TestContentItemId", col => col.WithLength(26))
+            .Column<long>("VariantAConversions", col => col.WithDefault(0))
+            .Column<long>("VariantBConversions", col => col.WithDefault(0))
+        );
+
+        // Create unique index on TestContentItemId for fast lookups
+        await SchemaBuilder.AlterTableAsync("ABTestGoalRecord", table => table
+            .CreateIndex("IDX_ABTestGoalRecord_TestContentItemId",
+                "TestContentItemId")
+        );
+
+        return 4;
+    }
 }

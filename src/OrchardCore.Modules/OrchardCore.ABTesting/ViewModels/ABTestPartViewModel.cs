@@ -71,6 +71,37 @@ public class ABTestPartViewModel
     /// </summary>
     [BindNever]
     public ABTestStatus Status { get; set; }
+
+    /// <summary>
+    /// The type of goal to track for this A/B test.
+    /// </summary>
+    public GoalType GoalType { get; set; } = GoalType.None;
+
+    /// <summary>
+    /// CSS selector for ButtonLinkClick or FormSubmission goals.
+    /// </summary>
+    public string GoalSelector { get; set; }
+
+    /// <summary>
+    /// Scroll percentage threshold (0-100) for ScrollPercentage goals.
+    /// </summary>
+    public int GoalScrollPercentage { get; set; } = 50;
+
+    /// <summary>
+    /// Custom JavaScript event name for CustomEvent goals.
+    /// </summary>
+    public string GoalEventName { get; set; }
+
+    /// <summary>
+    /// Display name for the goal (optional).
+    /// </summary>
+    public string GoalDisplayName { get; set; }
+
+    /// <summary>
+    /// Total conversions across both variants.
+    /// </summary>
+    [BindNever]
+    public long TotalConversions { get; set; }
 }
 
 /// <summary>
