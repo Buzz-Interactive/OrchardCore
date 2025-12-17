@@ -3,24 +3,24 @@
 @switch (Model.Status)
 {
     case ABTestStatus.Inactive:
-        <span class="badge ta-badge"><i class="fa-solid fa-ban text-danger" aria-hidden="true"></i> @T["Inactive"]</span>
+        <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-ban text-danger" aria-hidden="true"></i> @T["Inactive"]</span>
         break;
     case ABTestStatus.Scheduled:
-        <span class="badge ta-badge"><i class="fa-solid fa-hourglass-start text-warning" aria-hidden="true"></i>  @T["Scheduled"]</span>
+        <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-hourglass-start text-warning" aria-hidden="true"></i>  @T["Scheduled"]</span>
         if (Model.ScheduledStartUtc.HasValue)
         {
             <span class="badge ta-badge"><i class="fa-solid fa-calendar" aria-hidden="true"></i>  @T["Starts: {0}", (object)(await DisplayAsync(await New.DateTime(Utc: Model.ScheduledStartUtc, Format: "g")))]</span>
         }
         break;
     case ABTestStatus.Running:
-        <span class="badge ta-badge"><i class="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true"></i> @T["Running"]</span>
+        <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true"></i> @T["Running"]</span>
         if (Model.ScheduledEndUtc.HasValue)
         {
             <span class="badge ta-badge"><i class="fa-solid fa-calendar text-secondary" aria-hidden="true"></i>  @T["Ends: {0}", (object)(await DisplayAsync(await New.DateTime(Utc: Model.ScheduledEndUtc, Format: "g")))]</span>
         }
         break;
     case ABTestStatus.Ended:
-        <span class="badge ta-badge"><i class="fa-solid fa-check text-success" aria-hidden="true"></i> @T["Ended"]</span>
+        <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-check text-success" aria-hidden="true"></i> @T["Ended"]</span>
         if (Model.ScheduledEndUtc.HasValue)
         {
             <span class="badge ta-badge"><i class="fa-solid fa-calendar text-secondary" aria-hidden="true"></i>  @T["Ended: {0}", (object)(await DisplayAsync(await New.DateTime(Utc: Model.ScheduledEndUtc, Format: "g")))]</span>
@@ -28,4 +28,4 @@
         break;
 }
 
-<span class="badge ta-badge"><i class="fa-solid fa-eye text-secondary" aria-hidden="true"></i> @T["{0} impressions", Model.TotalImpressions]</span>
+<span class="badge ta-badge" data-bs-original-title="Total Impressions" data-bs-toggle="tooltip"><i class="fa-solid fa-eye text-secondary" aria-hidden="true"></i> @T["{0} Impressions", Model.TotalImpressions]</span>
