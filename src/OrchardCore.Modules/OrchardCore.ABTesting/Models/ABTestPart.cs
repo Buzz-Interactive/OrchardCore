@@ -19,4 +19,16 @@ public class ABTestPart : ContentPart
     /// Inactive tests will not intercept requests.
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// The scheduled start date/time in UTC when the test should begin serving variants.
+    /// Null means the test starts immediately when published and active.
+    /// </summary>
+    public DateTime? ScheduledStartUtc { get; set; }
+
+    /// <summary>
+    /// The scheduled end date/time in UTC when the test should stop serving variants.
+    /// Null means the test runs indefinitely until manually deactivated.
+    /// </summary>
+    public DateTime? ScheduledEndUtc { get; set; }
 }

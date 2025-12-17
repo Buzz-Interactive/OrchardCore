@@ -1,6 +1,7 @@
 using OrchardCore.ABTesting.Models;
 using OrchardCore.ABTesting.Records;
 using OrchardCore.ContentManagement;
+using OrchardCore.Modules;
 using YesSql;
 
 namespace OrchardCore.ABTesting.Services;
@@ -12,11 +13,16 @@ public class ABTestLookupService : IABTestLookupService
 {
     private readonly ISession _session;
     private readonly IContentManager _contentManager;
+    private readonly IClock _clock;
 
-    public ABTestLookupService(ISession session, IContentManager contentManager)
+    public ABTestLookupService(
+        ISession session,
+        IContentManager contentManager,
+        IClock clock)
     {
         _session = session;
         _contentManager = contentManager;
+        _clock = clock;
     }
 
     /// <inheritdoc />
@@ -27,11 +33,16 @@ public class ABTestLookupService : IABTestLookupService
             return null;
         }
 
+        var utcNow = _clock.UtcNow;
+
         // Find any active, published test that contains this content item as either variant
+        // and is within its scheduled date range
         var index = await _session.QueryIndex<ABTestIndex>(i =>
             i.Published &&
             i.IsActive &&
-            (i.VariantAContentItemId == contentItemId || i.VariantBContentItemId == contentItemId))
+            (i.VariantAContentItemId == contentItemId || i.VariantBContentItemId == contentItemId) &&
+            (i.ScheduledStartUtc == null || i.ScheduledStartUtc <= utcNow) &&
+            (i.ScheduledEndUtc == null || i.ScheduledEndUtc > utcNow))
             .FirstOrDefaultAsync();
 
         if (index == null)
@@ -57,8 +68,13 @@ public class ABTestLookupService : IABTestLookupService
     /// <inheritdoc />
     public async Task<IEnumerable<ABTestInfo>> GetActiveTestsAsync()
     {
+        var utcNow = _clock.UtcNow;
+
         var indexes = await _session.QueryIndex<ABTestIndex>(i =>
-            i.Published && i.IsActive)
+            i.Published &&
+            i.IsActive &&
+            (i.ScheduledStartUtc == null || i.ScheduledStartUtc <= utcNow) &&
+            (i.ScheduledEndUtc == null || i.ScheduledEndUtc > utcNow))
             .ListAsync();
 
         var results = new List<ABTestInfo>();

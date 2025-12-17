@@ -66,8 +66,6 @@ public class ABTestIndexProvider : ContentHandlerBase, IIndexProvider, IScopedIn
                     return null;
                 }
 
-                // Check if test is within scheduled dates
-
                 return new ABTestIndex
                 {
                     ABTestContentItemId = contentItem.ContentItemId,
@@ -77,6 +75,8 @@ public class ABTestIndexProvider : ContentHandlerBase, IIndexProvider, IScopedIn
                     IsActive = part.IsActive,
                     Published = contentItem.Published,
                     Latest = contentItem.Latest,
+                    ScheduledStartUtc = part.ScheduledStartUtc,
+                    ScheduledEndUtc = part.ScheduledEndUtc,
                 };
             });
     }

@@ -25,6 +25,24 @@
 </div>
 
 <div class="mb-3">
+    <h5>@T["Schedule (Optional)"]</h5>
+    <div class="row">
+        <div class="col-md-3">
+            <label asp-for="ScheduledStartLocalDateTime" class="form-label">@T["Start Date"]</label>
+            <input asp-for="ScheduledStartLocalDateTime" type="datetime-local" class="form-control" />
+            <span asp-validation-for="ScheduledStartLocalDateTime" class="text-danger"></span>
+            <div class="form-text">@T["Leave empty to start immediately when published."]</div>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="ScheduledEndLocalDateTime" class="form-label">@T["End Date"]</label>
+            <input asp-for="ScheduledEndLocalDateTime" type="datetime-local" class="form-control" />
+            <span asp-validation-for="ScheduledEndLocalDateTime" class="text-danger"></span>
+            <div class="form-text">@T["Leave empty to run indefinitely."]</div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
     <div class="form-check form-switch">
         <input asp-for="IsActive" class="form-check-input" type="checkbox" />
         <label asp-for="IsActive" class="form-check-label">@T["Test is Active"]</label>

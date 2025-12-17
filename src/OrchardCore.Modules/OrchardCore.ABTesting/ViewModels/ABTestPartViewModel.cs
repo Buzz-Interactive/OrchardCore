@@ -21,6 +21,28 @@ public class ABTestPartViewModel
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// The scheduled start date in UTC (for display purposes).
+    /// </summary>
+    [BindNever]
+    public DateTime? ScheduledStartUtc { get; set; }
+
+    /// <summary>
+    /// The scheduled start date in local time (for form binding).
+    /// </summary>
+    public DateTime? ScheduledStartLocalDateTime { get; set; }
+
+    /// <summary>
+    /// The scheduled end date in UTC (for display purposes).
+    /// </summary>
+    [BindNever]
+    public DateTime? ScheduledEndUtc { get; set; }
+
+    /// <summary>
+    /// The scheduled end date in local time (for form binding).
+    /// </summary>
+    public DateTime? ScheduledEndLocalDateTime { get; set; }
+
+    /// <summary>
     /// Display name of Variant A (from linked content item).
     /// </summary>
     [BindNever]
@@ -43,4 +65,36 @@ public class ABTestPartViewModel
     /// </summary>
     [BindNever]
     public long TotalImpressions { get; set; }
+
+    /// <summary>
+    /// The current status of the test based on schedule and IsActive flag.
+    /// </summary>
+    [BindNever]
+    public ABTestStatus Status { get; set; }
+}
+
+/// <summary>
+/// Represents the current status of an A/B test.
+/// </summary>
+public enum ABTestStatus
+{
+    /// <summary>
+    /// The test is inactive (IsActive = false).
+    /// </summary>
+    Inactive,
+
+    /// <summary>
+    /// The test is scheduled to start in the future.
+    /// </summary>
+    Scheduled,
+
+    /// <summary>
+    /// The test is currently running.
+    /// </summary>
+    Running,
+
+    /// <summary>
+    /// The test has ended (past the scheduled end date).
+    /// </summary>
+    Ended,
 }

@@ -7,6 +7,7 @@ using OrchardCore.ContentManagement;
 using OrchardCore.ContentManagement.Display.ContentDisplay;
 using OrchardCore.ContentManagement.Display.Models;
 using OrchardCore.DisplayManagement.Views;
+using OrchardCore.Modules;
 
 namespace OrchardCore.ABTesting.Drivers;
 
@@ -14,16 +15,22 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
 {
     private readonly IContentManager _contentManager;
     private readonly IImpressionService _impressionService;
+    private readonly ILocalClock _localClock;
+    private readonly IClock _clock;
 
     internal readonly IStringLocalizer S;
 
     public ABTestPartDisplayDriver(
         IContentManager contentManager,
         IImpressionService impressionService,
+        ILocalClock localClock,
+        IClock clock,
         IStringLocalizer<ABTestPartDisplayDriver> localizer)
     {
         _contentManager = contentManager;
         _impressionService = impressionService;
+        _localClock = localClock;
+        _clock = clock;
         S = localizer;
     }
 
@@ -51,7 +58,9 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
 
         await context.Updater.TryUpdateModelAsync(viewModel, Prefix,
             m => m.PercentageA,
-            m => m.IsActive);
+            m => m.IsActive,
+            m => m.ScheduledStartLocalDateTime,
+            m => m.ScheduledEndLocalDateTime);
 
         // Validate percentage range
         if (viewModel.PercentageA < 0 || viewModel.PercentageA > 100)
@@ -60,8 +69,31 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
                 S["Percentage must be between 0 and 100."]);
         }
 
+        // Convert local times to UTC
+        DateTime? scheduledStartUtc = null;
+        DateTime? scheduledEndUtc = null;
+
+        if (viewModel.ScheduledStartLocalDateTime.HasValue)
+        {
+            scheduledStartUtc = await _localClock.ConvertToUtcAsync(viewModel.ScheduledStartLocalDateTime.Value);
+        }
+
+        if (viewModel.ScheduledEndLocalDateTime.HasValue)
+        {
+            scheduledEndUtc = await _localClock.ConvertToUtcAsync(viewModel.ScheduledEndLocalDateTime.Value);
+        }
+
+        // Validate that end date is after start date (if both are provided)
+        if (scheduledStartUtc.HasValue && scheduledEndUtc.HasValue && scheduledEndUtc <= scheduledStartUtc)
+        {
+            context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.ScheduledEndLocalDateTime),
+                S["End date must be after start date."]);
+        }
+
         part.PercentageA = Math.Clamp(viewModel.PercentageA, 0, 100);
         part.IsActive = viewModel.IsActive;
+        part.ScheduledStartUtc = scheduledStartUtc;
+        part.ScheduledEndUtc = scheduledEndUtc;
 
         return Edit(part, context);
     }
@@ -71,6 +103,21 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         model.PercentageA = part.PercentageA;
         model.IsActive = part.IsActive;
         model.ABTestPart = part;
+
+        // Convert UTC to local for display
+        model.ScheduledStartUtc = part.ScheduledStartUtc;
+        model.ScheduledEndUtc = part.ScheduledEndUtc;
+
+        model.ScheduledStartLocalDateTime = part.ScheduledStartUtc.HasValue
+            ? (await _localClock.ConvertToLocalAsync(part.ScheduledStartUtc.Value)).DateTime
+            : null;
+
+        model.ScheduledEndLocalDateTime = part.ScheduledEndUtc.HasValue
+            ? (await _localClock.ConvertToLocalAsync(part.ScheduledEndUtc.Value)).DateTime
+            : null;
+
+        // Calculate the current status
+        model.Status = CalculateStatus(part, _clock.UtcNow);
 
         // Get total impressions
         var contentItemId = part.ContentItem.ContentItemId;
@@ -100,5 +147,27 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         {
             model.VariantBDisplayText = S["(Not selected)"];
         }
+    }
+
+    private static ABTestStatus CalculateStatus(ABTestPart part, DateTime utcNow)
+    {
+        if (!part.IsActive)
+        {
+            return ABTestStatus.Inactive;
+        }
+
+        // If there's a start date and we haven't reached it yet
+        if (part.ScheduledStartUtc.HasValue && utcNow < part.ScheduledStartUtc.Value)
+        {
+            return ABTestStatus.Scheduled;
+        }
+
+        // If there's an end date and we've passed it
+        if (part.ScheduledEndUtc.HasValue && utcNow >= part.ScheduledEndUtc.Value)
+        {
+            return ABTestStatus.Ended;
+        }
+
+        return ABTestStatus.Running;
     }
 }

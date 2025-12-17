@@ -116,4 +116,28 @@ public sealed class Migrations : DataMigration
 
         return 2;
     }
+
+    public async Task<int> UpdateFrom2Async()
+    {
+        // Add scheduled date columns to the ABTestIndex table
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .AddColumn<DateTime?>(nameof(ABTestIndex.ScheduledStartUtc))
+        );
+
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .AddColumn<DateTime?>(nameof(ABTestIndex.ScheduledEndUtc))
+        );
+
+        // Create index for efficient date-based lookups
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .CreateIndex("IDX_ABTestIndex_Schedule",
+                "DocumentId",
+                "Published",
+                "IsActive",
+                "ScheduledStartUtc",
+                "ScheduledEndUtc")
+        );
+
+        return 3;
+    }
 }
