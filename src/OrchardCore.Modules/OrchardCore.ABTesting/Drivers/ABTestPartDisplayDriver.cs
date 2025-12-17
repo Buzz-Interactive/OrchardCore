@@ -67,8 +67,7 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
             m => m.GoalType,
             m => m.GoalSelector,
             m => m.GoalScrollPercentage,
-            m => m.GoalEventName,
-            m => m.GoalDisplayName);
+            m => m.GoalEventName);
 
         // Validate percentage range
         if (viewModel.PercentageA < 0 || viewModel.PercentageA > 100)
@@ -134,7 +133,6 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         part.GoalSelector = viewModel.GoalSelector;
         part.GoalScrollPercentage = viewModel.GoalScrollPercentage;
         part.GoalEventName = viewModel.GoalEventName;
-        part.GoalDisplayName = viewModel.GoalDisplayName;
 
         return Edit(part, context);
     }
@@ -173,7 +171,6 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         model.GoalSelector = part.GoalSelector;
         model.GoalScrollPercentage = part.GoalScrollPercentage;
         model.GoalEventName = part.GoalEventName;
-        model.GoalDisplayName = part.GoalDisplayName;
 
         // Get display text for variants
         var variantAField = part.Get<ContentPickerField>("VariantA");

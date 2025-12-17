@@ -52,23 +52,16 @@
 
 <div class="mb-3">
     <h5>@T["Goal Configuration"]</h5>
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label asp-for="GoalType" class="form-label">@T["Goal Type"]</label>
-            <select asp-for="GoalType" class="form-select" id="goalTypeSelect">
-                <option value="0">@T["No Goal (Track impressions only)"]</option>
-                <option value="1">@T["Button/Link Click"]</option>
-                <option value="2">@T["Form Submission"]</option>
-                <option value="3">@T["Scroll Percentage"]</option>
-                <option value="4">@T["Custom Event"]</option>
-            </select>
-            <span asp-validation-for="GoalType" class="text-danger"></span>
-        </div>
-        <div class="col-md-6">
-            <label asp-for="GoalDisplayName" class="form-label">@T["Goal Name (Optional)"]</label>
-            <input asp-for="GoalDisplayName" class="form-control" placeholder="@T["e.g., Signup Button Click"]" />
-            <div class="form-text">@T["A friendly name for this goal, shown in results."]</div>
-        </div>
+    <div class="mb-3">
+        <label asp-for="GoalType" class="form-label">@T["Goal Type"]</label>
+        <select asp-for="GoalType" class="form-select" id="goalTypeSelect">
+            <option value="0">@T["No Goal (Track impressions only)"]</option>
+            <option value="1">@T["Button/Link Click"]</option>
+            <option value="2">@T["Form Submission"]</option>
+            <option value="3">@T["Scroll Percentage"]</option>
+            <option value="4">@T["Custom Event"]</option>
+        </select>
+        <span asp-validation-for="GoalType" class="text-danger"></span>
     </div>
 
     <div class="row mb-3" id="goalSelectorRow" style="display: none;">

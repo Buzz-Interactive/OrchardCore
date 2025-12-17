@@ -93,11 +93,6 @@ public class ABTestPartViewModel
     public string GoalEventName { get; set; }
 
     /// <summary>
-    /// Display name for the goal (optional).
-    /// </summary>
-    public string GoalDisplayName { get; set; }
-
-    /// <summary>
     /// Total conversions across both variants.
     /// </summary>
     [BindNever]

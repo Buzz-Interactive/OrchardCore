@@ -106,10 +106,8 @@ public class AdminController : Controller
             ? Math.Round((double)variantBConversions / variantBImpressions * 100, 2)
             : 0;
 
-        // Get goal display name
-        var goalDisplayName = !string.IsNullOrEmpty(abTestPart.GoalDisplayName)
-            ? abTestPart.GoalDisplayName
-            : GetDefaultGoalName(abTestPart.GoalType);
+        // Get goal display name based on type
+        var goalDisplayName = GetDefaultGoalName(abTestPart.GoalType);
 
         // Build shape with all the data
         var shape = await _shapeFactory.New.ABTestResults(

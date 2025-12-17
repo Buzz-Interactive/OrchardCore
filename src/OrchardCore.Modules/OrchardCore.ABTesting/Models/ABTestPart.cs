@@ -53,9 +53,4 @@ public class ABTestPart : ContentPart
     /// Example: "purchase-completed"
     /// </summary>
     public string GoalEventName { get; set; }
-
-    /// <summary>
-    /// Display name for the goal (optional, for readability in results).
-    /// </summary>
-    public string GoalDisplayName { get; set; }
 }
