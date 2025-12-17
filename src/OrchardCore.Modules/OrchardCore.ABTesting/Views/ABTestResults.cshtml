@@ -24,6 +24,36 @@
     double variantBConversionRate = Model.VariantBConversionRate;
     long totalConversions = Model.TotalConversions;
     bool hasGoal = goalType != GoalType.None;
+
+    // Statistical analysis
+    ABTestStatisticsResult statistics = Model.Statistics;
+    bool isVariantAWinner = statistics?.WinningVariant == ABVariant.A;
+    bool isVariantBWinner = statistics?.WinningVariant == ABVariant.B;
+}
+
+@if (hasGoal && statistics != null)
+{
+    @if (statistics.IsSignificant && statistics.WinningVariant.HasValue)
+    {
+        <div class="alert alert-success mb-4">
+            <i class="fa-solid fa-trophy me-2" aria-hidden="true"></i>
+            <strong>@statistics.SummaryText</strong>
+        </div>
+    }
+    else if (!statistics.HasSufficientData)
+    {
+        <div class="alert alert-info mb-4">
+            <i class="fa-solid fa-chart-line me-2" aria-hidden="true"></i>
+            @statistics.SummaryText
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-secondary mb-4">
+            <i class="fa-solid fa-scale-balanced me-2" aria-hidden="true"></i>
+            @statistics.SummaryText
+        </div>
+    }
 }
 
 <div class="row mb-4">
@@ -103,9 +133,15 @@ else
 {
     <div class="row">
         <div class="col-md-6">
-            <div class="card border-primary mb-3">
-                <div class="card-header bg-primary text-white">
+            <div class="card @(isVariantAWinner ? "border-success" : "border-primary") mb-3">
+                <div class="card-header @(isVariantAWinner ? "bg-success" : "bg-primary") text-white d-flex justify-content-between align-items-center">
                     <strong>@T["Variant A"]</strong>
+                    @if (isVariantAWinner)
+                    {
+                        <span class="badge bg-warning text-dark">
+                            <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Winner"]
+                        </span>
+                    }
                 </div>
                 <div class="card-body">
                     <p class="mb-1">
@@ -120,7 +156,7 @@ else
                     <h3 class="mb-0">@variantAImpressions.ToString("N0")</h3>
                     <small class="text-muted">@T["impressions"]</small>
                     <div class="progress mt-3" style="height: 25px;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: @variantAPercentage%;" aria-valuenow="@variantAPercentage" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar @(isVariantAWinner ? "bg-success" : "bg-primary")" role="progressbar" style="width: @variantAPercentage%;" aria-valuenow="@variantAPercentage" aria-valuemin="0" aria-valuemax="100">
                             @variantAPercentage%
                         </div>
                     </div>
@@ -134,7 +170,7 @@ else
                         <h4 class="mb-0">@variantAConversions.ToString("N0")</h4>
                         <small class="text-muted">@T["conversions"]</small>
                         <div class="progress mt-2" style="height: 20px;">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: @(Math.Min(variantAConversionRate * 5, 100))%;" aria-valuenow="@variantAConversionRate" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar @(isVariantAWinner ? "bg-success" : "bg-warning")" role="progressbar" style="width: @(Math.Min(variantAConversionRate * 5, 100))%;" aria-valuenow="@variantAConversionRate" aria-valuemin="0" aria-valuemax="100">
                                 @variantAConversionRate%
                             </div>
                         </div>
@@ -146,9 +182,15 @@ else
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card border-success mb-3">
-                <div class="card-header bg-success text-white">
+            <div class="card @(isVariantBWinner ? "border-success" : "border-primary") mb-3">
+                <div class="card-header @(isVariantBWinner ? "bg-success" : "bg-primary") text-white d-flex justify-content-between align-items-center">
                     <strong>@T["Variant B"]</strong>
+                    @if (isVariantBWinner)
+                    {
+                        <span class="badge bg-warning text-dark">
+                            <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Winner"]
+                        </span>
+                    }
                 </div>
                 <div class="card-body">
                     <p class="mb-1">
@@ -163,7 +205,7 @@ else
                     <h3 class="mb-0">@variantBImpressions.ToString("N0")</h3>
                     <small class="text-muted">@T["impressions"]</small>
                     <div class="progress mt-3" style="height: 25px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: @variantBPercentage%;" aria-valuenow="@variantBPercentage" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar @(isVariantBWinner ? "bg-success" : "bg-primary")" role="progressbar" style="width: @variantBPercentage%;" aria-valuenow="@variantBPercentage" aria-valuemin="0" aria-valuemax="100">
                             @variantBPercentage%
                         </div>
                     </div>
@@ -177,7 +219,7 @@ else
                         <h4 class="mb-0">@variantBConversions.ToString("N0")</h4>
                         <small class="text-muted">@T["conversions"]</small>
                         <div class="progress mt-2" style="height: 20px;">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: @(Math.Min(variantBConversionRate * 5, 100))%;" aria-valuenow="@variantBConversionRate" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar @(isVariantBWinner ? "bg-success" : "bg-warning")" role="progressbar" style="width: @(Math.Min(variantBConversionRate * 5, 100))%;" aria-valuenow="@variantBConversionRate" aria-valuemin="0" aria-valuemax="100">
                                 @variantBConversionRate%
                             </div>
                         </div>

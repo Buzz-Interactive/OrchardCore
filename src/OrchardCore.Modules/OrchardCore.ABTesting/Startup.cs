@@ -14,6 +14,7 @@ using OrchardCore.ContentManagement.Display.ContentDisplay;
 using OrchardCore.ContentManagement.Handlers;
 using OrchardCore.Data;
 using OrchardCore.Data.Migration;
+using OrchardCore.DisplayManagement.Handlers;
 using OrchardCore.Modules;
 using OrchardCore.Navigation;
 using OrchardCore.Security.Permissions;
@@ -35,9 +36,13 @@ public sealed class Startup : StartupBase
         services.AddScoped<IGoalService, GoalService>();
         services.AddScoped<IVisitorAssignmentService, VisitorAssignmentService>();
         services.AddScoped<IABTestContentResolver, ABTestContentResolver>();
+        services.AddSingleton<IStatisticalAnalysisService, StatisticalAnalysisService>();
 
         // Register display driver for results action menu
         services.AddScoped<IContentDisplayDriver, ABTestResultsDisplayDriver>();
+
+        // Register settings display driver
+        services.AddSiteDisplayDriver<ABTestingSettingsDisplayDriver>();
 
         // Register the tracking filter
         services.Configure<MvcOptions>(options =>
