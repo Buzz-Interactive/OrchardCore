@@ -2,12 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrchardCore.ABTesting.Models;
 using OrchardCore.ABTesting.Services;
-using OrchardCore.ABTesting.Settings;
 using OrchardCore.Admin;
 using OrchardCore.ContentFields.Fields;
 using OrchardCore.ContentManagement;
 using OrchardCore.DisplayManagement;
-using OrchardCore.Settings;
 
 namespace OrchardCore.ABTesting.Controllers;
 
@@ -18,7 +16,6 @@ public class AdminController : Controller
     private readonly IImpressionService _impressionService;
     private readonly IGoalService _goalService;
     private readonly IStatisticalAnalysisService _statisticalAnalysisService;
-    private readonly ISiteService _siteService;
     private readonly IAuthorizationService _authorizationService;
     private readonly IShapeFactory _shapeFactory;
 
@@ -27,7 +24,6 @@ public class AdminController : Controller
         IImpressionService impressionService,
         IGoalService goalService,
         IStatisticalAnalysisService statisticalAnalysisService,
-        ISiteService siteService,
         IAuthorizationService authorizationService,
         IShapeFactory shapeFactory)
     {
@@ -35,7 +31,6 @@ public class AdminController : Controller
         _impressionService = impressionService;
         _goalService = goalService;
         _statisticalAnalysisService = statisticalAnalysisService;
-        _siteService = siteService;
         _authorizationService = authorizationService;
         _shapeFactory = shapeFactory;
     }
@@ -117,9 +112,6 @@ public class AdminController : Controller
         // Get goal display name based on type
         var goalDisplayName = GetDefaultGoalName(abTestPart.GoalType);
 
-        // Get settings for statistical analysis
-        var settings = await _siteService.GetSettingsAsync<ABTestingSettings>();
-
         // Perform statistical analysis (only meaningful when there's a goal)
         var statistics = abTestPart.GoalType != GoalType.None
             ? _statisticalAnalysisService.Analyze(
@@ -127,8 +119,8 @@ public class AdminController : Controller
                 variantBImpressions,
                 variantAConversions,
                 variantBConversions,
-                settings.MinimumSampleSize,
-                settings.ConfidenceThreshold)
+                abTestPart.MinimumSampleSize,
+                abTestPart.ConfidenceThreshold)
             : null;
 
         // Build shape with all the data

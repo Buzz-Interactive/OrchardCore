@@ -57,7 +57,9 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
             m => m.GoalType,
             m => m.GoalSelector,
             m => m.GoalScrollPercentage,
-            m => m.GoalEventName);
+            m => m.GoalEventName,
+            m => m.MinimumSampleSize,
+            m => m.ConfidenceThreshold);
 
         // Check if goals are locked (published + has impressions)
         var contentItemId = part.ContentItem.ContentItemId;
@@ -98,6 +100,20 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         {
             context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.PercentageA),
                 S["Percentage must be between 0 and 100."]);
+        }
+
+        // Validate MinimumSampleSize range
+        if (viewModel.MinimumSampleSize < 30 || viewModel.MinimumSampleSize > 500)
+        {
+            context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.MinimumSampleSize),
+                S["Minimum sample size must be between 30 and 500."]);
+        }
+
+        // Validate ConfidenceThreshold values
+        if (viewModel.ConfidenceThreshold != 90 && viewModel.ConfidenceThreshold != 95 && viewModel.ConfidenceThreshold != 99)
+        {
+            context.Updater.ModelState.AddModelError(Prefix + "." + nameof(viewModel.ConfidenceThreshold),
+                S["Confidence threshold must be 90, 95, or 99."]);
         }
 
         // Validate goal configuration only if goals are not locked
@@ -142,6 +158,9 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
             part.GoalEventName = viewModel.GoalEventName;
         }
 
+        part.MinimumSampleSize = Math.Clamp(viewModel.MinimumSampleSize, 30, 500);
+        part.ConfidenceThreshold = viewModel.ConfidenceThreshold;
+
         return Edit(part, context);
     }
 
@@ -170,6 +189,10 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         model.GoalSelector = part.GoalSelector;
         model.GoalScrollPercentage = part.GoalScrollPercentage;
         model.GoalEventName = part.GoalEventName;
+
+        // Populate statistical settings
+        model.MinimumSampleSize = part.MinimumSampleSize;
+        model.ConfidenceThreshold = part.ConfidenceThreshold;
 
         // Get display text for variants
         var variantAField = part.Get<ContentPickerField>("VariantA");

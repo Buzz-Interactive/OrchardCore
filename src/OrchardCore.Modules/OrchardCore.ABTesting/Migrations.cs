@@ -119,4 +119,14 @@ public sealed class Migrations : DataMigration
 
         return 5;
     }
+
+    public static int UpdateFrom5()
+    {
+        // Statistical settings (MinimumSampleSize, ConfidenceThreshold) are now stored
+        // on individual ABTestPart instances instead of site-wide settings.
+        // The properties have default values in the model, so existing content items
+        // will automatically use the defaults when loaded (MinimumSampleSize: 50, ConfidenceThreshold: 90).
+        // No schema changes are needed since these are stored in the JSON content.
+        return 6;
+    }
 }

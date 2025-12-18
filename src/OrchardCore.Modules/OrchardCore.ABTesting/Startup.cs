@@ -42,9 +42,6 @@ public sealed class Startup : StartupBase
         // Register display driver for results action menu
         services.AddScoped<IContentDisplayDriver, ABTestResultsDisplayDriver>();
 
-        // Register settings display driver
-        services.AddSiteDisplayDriver<ABTestingSettingsDisplayDriver>();
-
         // Register the tracking filter
         services.Configure<MvcOptions>(options =>
         {
