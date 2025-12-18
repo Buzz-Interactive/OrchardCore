@@ -9,38 +9,13 @@
                 case ABTestStatus.Inactive:
                     <span class="badge bg-secondary ms-2">@T["Inactive"]</span>
                     break;
-                case ABTestStatus.Scheduled:
-                    <span class="badge bg-info ms-2">@T["Scheduled"]</span>
-                    break;
                 case ABTestStatus.Running:
                     <span class="badge bg-success ms-2">@T["Running"]</span>
-                    break;
-                case ABTestStatus.Ended:
-                    <span class="badge bg-warning text-dark ms-2">@T["Ended"]</span>
                     break;
             }
         </h5>
     </div>
     <div class="card-body">
-        @if (Model.ScheduledStartUtc.HasValue || Model.ScheduledEndUtc.HasValue)
-        {
-            <div class="row mb-3">
-                @if (Model.ScheduledStartUtc.HasValue)
-                {
-                    <div class="col-md-6">
-                        <strong>@T["Start Date:"]</strong>
-                        @await DisplayAsync(await New.DateTime(Utc: Model.ScheduledStartUtc))
-                    </div>
-                }
-                @if (Model.ScheduledEndUtc.HasValue)
-                {
-                    <div class="col-md-6">
-                        <strong>@T["End Date:"]</strong>
-                        @await DisplayAsync(await New.DateTime(Utc: Model.ScheduledEndUtc))
-                    </div>
-                }
-            </div>
-        }
         <div class="row">
             <div class="col-md-6">
                 <h6>@T["Variant A"]</h6>

@@ -42,14 +42,4 @@ public class ABTestIndex : MapIndex
     /// Whether this is the latest version of the ABTest content item.
     /// </summary>
     public bool Latest { get; set; }
-
-    /// <summary>
-    /// The scheduled start date/time in UTC. Null means no start restriction.
-    /// </summary>
-    public DateTime? ScheduledStartUtc { get; set; }
-
-    /// <summary>
-    /// The scheduled end date/time in UTC. Null means no end restriction.
-    /// </summary>
-    public DateTime? ScheduledEndUtc { get; set; }
 }

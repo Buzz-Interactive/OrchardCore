@@ -75,8 +75,6 @@ public class ABTestIndexProvider : ContentHandlerBase, IIndexProvider, IScopedIn
                     IsActive = part.IsActive,
                     Published = contentItem.Published,
                     Latest = contentItem.Latest,
-                    ScheduledStartUtc = part.ScheduledStartUtc,
-                    ScheduledEndUtc = part.ScheduledEndUtc,
                 };
             });
     }

@@ -1,5 +1,6 @@
 @model ABTestPartViewModel
 
+
 <div class="mb-3">
     <h5>@T["Traffic Split"]</h5>
     <div class="row align-items-center">
@@ -25,24 +26,6 @@
 </div>
 
 <div class="mb-3">
-    <h5>@T["Schedule (Optional)"]</h5>
-    <div class="row">
-        <div class="col-md-3">
-            <label asp-for="ScheduledStartLocalDateTime" class="form-label">@T["Start Date"]</label>
-            <input asp-for="ScheduledStartLocalDateTime" type="datetime-local" class="form-control" />
-            <span asp-validation-for="ScheduledStartLocalDateTime" class="text-danger"></span>
-            <div class="form-text">@T["Leave empty to start immediately when published."]</div>
-        </div>
-        <div class="col-md-3">
-            <label asp-for="ScheduledEndLocalDateTime" class="form-label">@T["End Date"]</label>
-            <input asp-for="ScheduledEndLocalDateTime" type="datetime-local" class="form-control" />
-            <span asp-validation-for="ScheduledEndLocalDateTime" class="text-danger"></span>
-            <div class="form-text">@T["Leave empty to run indefinitely."]</div>
-        </div>
-    </div>
-</div>
-
-<div class="mb-3">
     <div class="form-check form-switch">
         <input asp-for="IsActive" class="form-check-input" type="checkbox" />
         <label asp-for="IsActive" class="form-check-label">@T["Test is Active"]</label>
@@ -59,7 +42,7 @@
             @T["Goal configuration is locked because this test has been published and has tracked impressions. Changing goal settings after data collection has started would invalidate existing conversion data."]
         </div>
     }
-    <div class="mb-3">
+    <div class="mb-3 w-50">
         <label asp-for="GoalType" class="form-label">@T["Goal Type"]</label>
         <select asp-for="GoalType" class="form-select" id="goalTypeSelect" disabled="@Model.AreGoalsLocked">
             <option value="0">@T["No Goal (Track impressions only)"]</option>
@@ -71,34 +54,28 @@
         <span asp-validation-for="GoalType" class="text-danger"></span>
     </div>
 
-    <div class="row mb-3" id="goalSelectorRow" style="display: none;">
-        <div class="col-md-6">
-            <label asp-for="GoalSelector" class="form-label">@T["CSS Selector"]</label>
-            <input asp-for="GoalSelector" class="form-control" placeholder="@T["e.g., #signup-btn or .cta-button"]" disabled="@Model.AreGoalsLocked" />
-            <span asp-validation-for="GoalSelector" class="text-danger"></span>
-            <div class="form-text">@T["The CSS selector to identify the element(s) to track."]</div>
-        </div>
+    <div class="mb-3 w-50" id="goalSelectorRow" style="display: none;">
+        <label asp-for="GoalSelector" class="form-label">@T["CSS Selector"]</label>
+        <input asp-for="GoalSelector" class="form-control" placeholder="@T["e.g., #signup-btn or .cta-button"]" disabled="@Model.AreGoalsLocked" />
+        <span asp-validation-for="GoalSelector" class="text-danger"></span>
+        <div class="form-text">@T["The CSS selector to identify the element(s) to track."]</div>
     </div>
 
-    <div class="row mb-3" id="goalScrollRow" style="display: none;">
-        <div class="col-md-4">
-            <label asp-for="GoalScrollPercentage" class="form-label">@T["Scroll Percentage"]</label>
-            <div class="input-group">
-                <input asp-for="GoalScrollPercentage" type="number" min="0" max="100" class="form-control" disabled="@Model.AreGoalsLocked" />
-                <span class="input-group-text">%</span>
-            </div>
-            <span asp-validation-for="GoalScrollPercentage" class="text-danger"></span>
-            <div class="form-text">@T["Track when user scrolls past this percentage of the page."]</div>
+    <div class="mb-3 w-50" id="goalScrollRow" style="display: none;">
+        <label asp-for="GoalScrollPercentage" class="form-label">@T["Scroll Percentage"]</label>
+        <div class="input-group">
+            <input asp-for="GoalScrollPercentage" type="number" min="0" max="100" class="form-control" disabled="@Model.AreGoalsLocked" />
+            <span class="input-group-text">%</span>
         </div>
+        <span asp-validation-for="GoalScrollPercentage" class="text-danger"></span>
+        <div class="form-text">@T["Track when user scrolls past this percentage of the page."]</div>
     </div>
 
-    <div class="row mb-3" id="goalEventRow" style="display: none;">
-        <div class="col-md-6">
-            <label asp-for="GoalEventName" class="form-label">@T["Event Name"]</label>
-            <input asp-for="GoalEventName" class="form-control" placeholder="@T["e.g., purchase-completed"]" disabled="@Model.AreGoalsLocked" />
-            <span asp-validation-for="GoalEventName" class="text-danger"></span>
-            <div class="form-text">@T["The custom JavaScript event name to listen for. Trigger with: window.dispatchEvent(new Event('event-name'))"]</div>
-        </div>
+    <div class="mb-3 w-50" id="goalEventRow" style="display: none;">
+        <label asp-for="GoalEventName" class="form-label">@T["Event Name"]</label>
+        <input asp-for="GoalEventName" class="form-control" placeholder="@T["e.g., purchase-completed"]" disabled="@Model.AreGoalsLocked" />
+        <span asp-validation-for="GoalEventName" class="text-danger"></span>
+        <div class="form-text">@T["The custom JavaScript event name to listen for. Trigger with: window.dispatchEvent(new Event('event-name'))"]</div>
     </div>
 
     @if (Model.AreGoalsLocked)

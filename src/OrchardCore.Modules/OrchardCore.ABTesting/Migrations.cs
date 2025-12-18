@@ -120,12 +120,13 @@ public sealed class Migrations : DataMigration
     public async Task<int> UpdateFrom2Async()
     {
         // Add scheduled date columns to the ABTestIndex table
+        // Note: These columns are dropped in UpdateFrom4Async as the feature was removed
         await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
-            .AddColumn<DateTime?>(nameof(ABTestIndex.ScheduledStartUtc))
+            .AddColumn<DateTime?>("ScheduledStartUtc")
         );
 
         await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
-            .AddColumn<DateTime?>(nameof(ABTestIndex.ScheduledEndUtc))
+            .AddColumn<DateTime?>("ScheduledEndUtc")
         );
 
         // Create index for efficient date-based lookups
@@ -158,5 +159,23 @@ public sealed class Migrations : DataMigration
         );
 
         return 4;
+    }
+
+    public async Task<int> UpdateFrom4Async()
+    {
+        // Remove scheduled date columns and index (feature removed)
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .DropIndex("IDX_ABTestIndex_Schedule")
+        );
+
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .DropColumn("ScheduledStartUtc")
+        );
+
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .DropColumn("ScheduledEndUtc")
+        );
+
+        return 5;
     }
 }

@@ -21,28 +21,6 @@ public class ABTestPartViewModel
     public bool IsActive { get; set; } = true;
 
     /// <summary>
-    /// The scheduled start date in UTC (for display purposes).
-    /// </summary>
-    [BindNever]
-    public DateTime? ScheduledStartUtc { get; set; }
-
-    /// <summary>
-    /// The scheduled start date in local time (for form binding).
-    /// </summary>
-    public DateTime? ScheduledStartLocalDateTime { get; set; }
-
-    /// <summary>
-    /// The scheduled end date in UTC (for display purposes).
-    /// </summary>
-    [BindNever]
-    public DateTime? ScheduledEndUtc { get; set; }
-
-    /// <summary>
-    /// The scheduled end date in local time (for form binding).
-    /// </summary>
-    public DateTime? ScheduledEndLocalDateTime { get; set; }
-
-    /// <summary>
     /// Display name of Variant A (from linked content item).
     /// </summary>
     [BindNever]
@@ -117,17 +95,7 @@ public enum ABTestStatus
     Inactive,
 
     /// <summary>
-    /// The test is scheduled to start in the future.
-    /// </summary>
-    Scheduled,
-
-    /// <summary>
     /// The test is currently running.
     /// </summary>
     Running,
-
-    /// <summary>
-    /// The test has ended (past the scheduled end date).
-    /// </summary>
-    Ended,
 }
