@@ -15,12 +15,6 @@ public class ABTestPart : ContentPart
     public int PercentageA { get; set; } = 50;
 
     /// <summary>
-    /// Whether this A/B test is currently active.
-    /// Inactive tests will not intercept requests.
-    /// </summary>
-    public bool IsActive { get; set; } = true;
-
-    /// <summary>
     /// The type of goal to track for this A/B test.
     /// </summary>
     public GoalType GoalType { get; set; } = GoalType.None;

@@ -3,10 +3,10 @@
 @switch (Model.Status)
 {
     case ABTestStatus.Inactive:
-        <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-ban text-danger" aria-hidden="true"></i> @T["Inactive"]</span>
+        <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-ban text-secondary" aria-hidden="true"></i> @T["Draft"]</span>
         break;
     case ABTestStatus.Running:
-        <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true"></i> @T["Running"]</span>
+        <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-play text-success" aria-hidden="true"></i> @T["Running"]</span>
         break;
 }
 

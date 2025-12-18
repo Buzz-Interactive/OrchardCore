@@ -29,11 +29,6 @@ public class ABTestIndex : MapIndex
     public int PercentageA { get; set; }
 
     /// <summary>
-    /// Whether the test is currently active.
-    /// </summary>
-    public bool IsActive { get; set; }
-
-    /// <summary>
     /// Whether the ABTest content item is published.
     /// </summary>
     public bool Published { get; set; }

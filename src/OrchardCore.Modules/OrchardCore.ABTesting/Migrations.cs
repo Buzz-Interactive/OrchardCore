@@ -61,7 +61,6 @@ public sealed class Migrations : DataMigration
             .Column<string>("VariantAContentItemId", col => col.WithLength(26))
             .Column<string>("VariantBContentItemId", col => col.WithLength(26))
             .Column<int>("PercentageA")
-            .Column<bool>("IsActive")
             .Column<bool>("Published", col => col.WithDefault(true))
             .Column<bool>("Latest", col => col.WithDefault(false))
         );
@@ -73,7 +72,6 @@ public sealed class Migrations : DataMigration
                 "ABTestContentItemId",
                 "VariantAContentItemId",
                 "VariantBContentItemId",
-                "IsActive",
                 "Published",
                 "Latest")
         );
@@ -83,7 +81,6 @@ public sealed class Migrations : DataMigration
             .CreateIndex("IDX_ABTestIndex_VariantA",
                 "DocumentId",
                 "VariantAContentItemId",
-                "IsActive",
                 "Published")
         );
 
@@ -91,7 +88,6 @@ public sealed class Migrations : DataMigration
             .CreateIndex("IDX_ABTestIndex_VariantB",
                 "DocumentId",
                 "VariantBContentItemId",
-                "IsActive",
                 "Published")
         );
 

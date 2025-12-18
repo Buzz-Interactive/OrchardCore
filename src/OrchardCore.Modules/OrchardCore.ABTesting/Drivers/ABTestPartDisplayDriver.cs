@@ -54,7 +54,6 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
 
         await context.Updater.TryUpdateModelAsync(viewModel, Prefix,
             m => m.PercentageA,
-            m => m.IsActive,
             m => m.GoalType,
             m => m.GoalSelector,
             m => m.GoalScrollPercentage,
@@ -133,7 +132,6 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         }
 
         part.PercentageA = Math.Clamp(viewModel.PercentageA, 0, 100);
-        part.IsActive = viewModel.IsActive;
 
         // Only update goal fields if not locked
         if (!areGoalsLocked)
@@ -150,11 +148,10 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
     private async ValueTask BuildViewModelAsync(ABTestPartViewModel model, ABTestPart part)
     {
         model.PercentageA = part.PercentageA;
-        model.IsActive = part.IsActive;
         model.ABTestPart = part;
 
-        // Calculate the current status
-        model.Status = part.IsActive ? ABTestStatus.Running : ABTestStatus.Inactive;
+        // Calculate the current status based on published state
+        model.Status = part.ContentItem.Published ? ABTestStatus.Running : ABTestStatus.Inactive;
 
         // Get total impressions and conversions
         var contentItemId = part.ContentItem.ContentItemId;

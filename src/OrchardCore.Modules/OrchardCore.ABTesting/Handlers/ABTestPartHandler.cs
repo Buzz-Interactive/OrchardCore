@@ -24,7 +24,6 @@ public class ABTestPartHandler : ContentPartHandler<ABTestPart>
     public override Task InitializingAsync(InitializingContentContext context, ABTestPart part)
     {
         part.PercentageA = 50;
-        part.IsActive = true;
 
         return Task.CompletedTask;
     }

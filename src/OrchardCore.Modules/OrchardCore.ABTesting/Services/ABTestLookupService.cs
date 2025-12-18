@@ -29,10 +29,9 @@ public class ABTestLookupService : IABTestLookupService
             return null;
         }
 
-        // Find any active, published test that contains this content item as either variant
+        // Find any published test that contains this content item as either variant
         var index = await _session.QueryIndex<ABTestIndex>(i =>
             i.Published &&
-            i.IsActive &&
             (i.VariantAContentItemId == contentItemId || i.VariantBContentItemId == contentItemId))
             .FirstOrDefaultAsync();
 
@@ -65,8 +64,7 @@ public class ABTestLookupService : IABTestLookupService
     public async Task<IEnumerable<ABTestInfo>> GetActiveTestsAsync()
     {
         var indexes = await _session.QueryIndex<ABTestIndex>(i =>
-            i.Published &&
-            i.IsActive)
+            i.Published)
             .ListAsync();
 
         var results = new List<ABTestInfo>();

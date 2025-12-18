@@ -16,11 +16,6 @@ public class ABTestPartViewModel
     public int PercentageB => 100 - PercentageA;
 
     /// <summary>
-    /// Whether the test is currently active.
-    /// </summary>
-    public bool IsActive { get; set; } = true;
-
-    /// <summary>
     /// Display name of Variant A (from linked content item).
     /// </summary>
     [BindNever]
@@ -45,7 +40,7 @@ public class ABTestPartViewModel
     public long TotalImpressions { get; set; }
 
     /// <summary>
-    /// The current status of the test based on schedule and IsActive flag.
+    /// The current status of the test based on published state.
     /// </summary>
     [BindNever]
     public ABTestStatus Status { get; set; }
@@ -90,12 +85,12 @@ public class ABTestPartViewModel
 public enum ABTestStatus
 {
     /// <summary>
-    /// The test is inactive (IsActive = false).
+    /// The test is not published (draft or unpublished).
     /// </summary>
     Inactive,
 
     /// <summary>
-    /// The test is currently running.
+    /// The test is published and currently running.
     /// </summary>
     Running,
 }

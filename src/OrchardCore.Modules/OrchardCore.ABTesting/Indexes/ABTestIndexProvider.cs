@@ -72,7 +72,6 @@ public class ABTestIndexProvider : ContentHandlerBase, IIndexProvider, IScopedIn
                     VariantAContentItemId = variantAId,
                     VariantBContentItemId = variantBId,
                     PercentageA = part.PercentageA,
-                    IsActive = part.IsActive,
                     Published = contentItem.Published,
                     Latest = contentItem.Latest,
                 };

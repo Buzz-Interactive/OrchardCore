@@ -137,7 +137,7 @@ public class AdminController : Controller
             TestContentItemId: contentItemId,
             TargetPercentageA: abTestPart.PercentageA,
             TargetPercentageB: 100 - abTestPart.PercentageA,
-            IsActive: abTestPart.IsActive,
+            IsPublished: contentItem.Published,
             VariantAName: variantAName,
             VariantAContentItemId: variantAContentItemId,
             VariantAImpressions: variantAImpressions,
