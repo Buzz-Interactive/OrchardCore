@@ -110,11 +110,11 @@
         function updateGoalFields() {
             var value = parseInt(goalTypeSelect.value);
             // 1 = ButtonLinkClick, 2 = FormSubmission
-            selectorRow.style.display = (value === 1 || value === 2) ? 'flex' : 'none';
+            selectorRow.style.display = (value === 1 || value === 2) ? 'block' : 'none';
             // 3 = ScrollPercentage
-            scrollRow.style.display = (value === 3) ? 'flex' : 'none';
+            scrollRow.style.display = (value === 3) ? 'block' : 'none';
             // 4 = CustomEvent
-            eventRow.style.display = (value === 4) ? 'flex' : 'none';
+            eventRow.style.display = (value === 4) ? 'block' : 'none';
         }
 
         goalTypeSelect.addEventListener('change', updateGoalFields);
