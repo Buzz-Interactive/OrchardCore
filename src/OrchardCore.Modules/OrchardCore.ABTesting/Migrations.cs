@@ -95,11 +95,6 @@ public sealed class Migrations : DataMigration
                 "Published")
         );
 
-        return 1;
-    }
-
-    public async Task<int> UpdateFrom1Async()
-    {
         // Create the impression tracking table
         await SchemaBuilder.CreateTableAsync("ABTestImpressionRecord", table => table
             .Column<int>("Id", col => col.PrimaryKey().Identity())
@@ -108,42 +103,11 @@ public sealed class Migrations : DataMigration
             .Column<long>("VariantBImpressions", col => col.WithDefault(0))
         );
 
-        // Create unique index on TestContentItemId for fast lookups
         await SchemaBuilder.AlterTableAsync("ABTestImpressionRecord", table => table
             .CreateIndex("IDX_ABTestImpressionRecord_TestContentItemId",
                 "TestContentItemId")
         );
 
-        return 2;
-    }
-
-    public async Task<int> UpdateFrom2Async()
-    {
-        // Add scheduled date columns to the ABTestIndex table
-        // Note: These columns are dropped in UpdateFrom4Async as the feature was removed
-        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
-            .AddColumn<DateTime?>("ScheduledStartUtc")
-        );
-
-        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
-            .AddColumn<DateTime?>("ScheduledEndUtc")
-        );
-
-        // Create index for efficient date-based lookups
-        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
-            .CreateIndex("IDX_ABTestIndex_Schedule",
-                "DocumentId",
-                "Published",
-                "IsActive",
-                "ScheduledStartUtc",
-                "ScheduledEndUtc")
-        );
-
-        return 3;
-    }
-
-    public async Task<int> UpdateFrom3Async()
-    {
         // Create the goal tracking table
         await SchemaBuilder.CreateTableAsync("ABTestGoalRecord", table => table
             .Column<int>("Id", col => col.PrimaryKey().Identity())
@@ -152,28 +116,9 @@ public sealed class Migrations : DataMigration
             .Column<long>("VariantBConversions", col => col.WithDefault(0))
         );
 
-        // Create unique index on TestContentItemId for fast lookups
         await SchemaBuilder.AlterTableAsync("ABTestGoalRecord", table => table
             .CreateIndex("IDX_ABTestGoalRecord_TestContentItemId",
                 "TestContentItemId")
-        );
-
-        return 4;
-    }
-
-    public async Task<int> UpdateFrom4Async()
-    {
-        // Remove scheduled date columns and index (feature removed)
-        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
-            .DropIndex("IDX_ABTestIndex_Schedule")
-        );
-
-        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
-            .DropColumn("ScheduledStartUtc")
-        );
-
-        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
-            .DropColumn("ScheduledEndUtc")
         );
 
         return 5;
