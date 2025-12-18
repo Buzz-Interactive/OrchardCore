@@ -35,7 +35,7 @@ public sealed class ABTestPartDisplayDriver : ContentPartDisplayDriver<ABTestPar
         return Combine(
             Initialize<ABTestPartViewModel>("ABTestPart_SummaryAdmin", model =>
                 BuildViewModelAsync(model, part))
-                .Location("SummaryAdmin", "Meta:10"),
+                .Location("SummaryAdmin", "TestMeta:10"),
             Initialize<ABTestPartViewModel>("ABTestPart_DetailAdmin", model =>
                 BuildViewModelAsync(model, part))
                 .Location("DetailAdmin", "Content:5")

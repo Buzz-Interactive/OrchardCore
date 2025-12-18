@@ -49,14 +49,7 @@
             }
 
             <div class="metadata me-1">
-                @if(contentItem.IsPublished())
-                {
-                    <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-clock-rotate-left text-primary" aria-hidden="true"></i> @T["Running"]</span>
-                }
-                else
-                {
-                    <span class="badge ta-badge" data-bs-original-title="Status" data-bs-toggle="tooltip"><i class="fa-solid fa-ban text-danger" aria-hidden="true"></i> @T["Inactive"]</span>
-                }
+                @await DisplayAsync(Model.TestMeta)
             </div>
         </div>
     </div>
