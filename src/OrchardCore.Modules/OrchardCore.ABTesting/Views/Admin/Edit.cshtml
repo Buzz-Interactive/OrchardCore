@@ -16,198 +16,222 @@
 
 <zone Name="Title"><h1>@RenderTitleSegments(T["Edit A/B Test"])</h1></zone>
 
-<div asp-validation-summary="ModelOnly"></div>
-
 <form asp-action="Edit" asp-route-testId="@Model.TestId" method="post" class="no-multisubmit">
-    <div class="mb-3" asp-validation-class-for="Name">
-        <label asp-for="Name" class="form-label">@T["Test Name"]</label>
-        <input asp-for="Name" class="form-control" autofocus />
-        <span asp-validation-for="Name" class="text-danger"></span>
-        <div class="form-text">@T["A descriptive name for this A/B test."]</div>
-    </div>
-
-    <h5 class="mt-4">@T["Variants"]</h5>
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3" asp-validation-class-for="VariantAContentItemId">
-                <label asp-for="VariantAContentItemId" class="form-label">@T["Variant A (Control)"]</label>
-                <div id="@variantAElementId" class="vue-multiselect" data-editor-type="ContentPicker" data-selected-items="@selectedVariantA" data-edit-url="@editUrl" data-view-url="@viewUrl" data-search-url="@searchUrl" data-multiple="false">
-                    <ul class="mb-1 list-group content-picker-default__list" v-show="arrayOfItems.length" v-cloak>
-                        <li v-for="(item, i) in arrayOfItems"
-                            class="list-group-item content-picker-default__list-item d-flex align-items-start justify-content-between"
-                            :key="item.id">
-                            <div class="align-items-center align-self-center">
-                                <a v-if="item.isClickable" :href="url(item)" target="_blank">
-                                    <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
-                                </a>
-                                <span v-else>
-                                    <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
-                                </span>
-                            </div>
-                            <div class="btn-group btn-group-sm align-items-center" role="group">
-                                <button v-on:click="remove(item)" type="button" class="btn btn-secondary content-picker-default__list-item__delete"><i class="fa-solid fa-trash fa-sm" aria-hidden="true"></i></button>
-                            </div>
-                        </li>
-                    </ul>
-                    <div>
-                        <input asp-for="VariantAContentItemId" type="hidden" v-model="selectedIds" />
-                        <vue-multiselect v-model="value" :options="options" track-by="id"
-                                         label="displayText" placeholder="@T["Type to search for content..."]"
-                                         @@search-change="asyncFind" @@select="onSelect"
-                                         :searchable="true" :close-on-select="true" :reset-after="true"
-                                         :show-labels="true" :hide-selected="false"
-                                         :disabled="isDisabled"
-                                         select-label="@T["Select"]" deselect-label="@T["Remove"]">
-                            <template slot="option" slot-scope="props">
-                                <div v-cloak><span>{{ props.option.displayText }}</span><span class="small ms-2" v-show="!props.option.hasPublished">(@T["Not published"])</span></div>
-                            </template>
-                            <template slot="noResult">
-                                @T["No result found"]
-                            </template>
-                        </vue-multiselect>
-                    </div>
-                </div>
-                <span asp-validation-for="VariantAContentItemId" class="text-danger"></span>
-                <div class="form-text">@T["Select the content item for the control variant."]</div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3" asp-validation-class-for="VariantBContentItemId">
-                <label asp-for="VariantBContentItemId" class="form-label">@T["Variant B (Challenger)"]</label>
-                <div id="@variantBElementId" class="vue-multiselect" data-editor-type="ContentPicker" data-selected-items="@selectedVariantB" data-edit-url="@editUrl" data-view-url="@viewUrl" data-search-url="@searchUrl" data-multiple="false">
-                    <ul class="mb-1 list-group content-picker-default__list" v-show="arrayOfItems.length" v-cloak>
-                        <li v-for="(item, i) in arrayOfItems"
-                            class="list-group-item content-picker-default__list-item d-flex align-items-start justify-content-between"
-                            :key="item.id">
-                            <div class="align-items-center align-self-center">
-                                <a v-if="item.isClickable" :href="url(item)" target="_blank">
-                                    <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
-                                </a>
-                                <span v-else>
-                                    <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
-                                </span>
-                            </div>
-                            <div class="btn-group btn-group-sm align-items-center" role="group">
-                                <button v-on:click="remove(item)" type="button" class="btn btn-secondary content-picker-default__list-item__delete"><i class="fa-solid fa-trash fa-sm" aria-hidden="true"></i></button>
-                            </div>
-                        </li>
-                    </ul>
-                    <div>
-                        <input asp-for="VariantBContentItemId" type="hidden" v-model="selectedIds" />
-                        <vue-multiselect v-model="value" :options="options" track-by="id"
-                                         label="displayText" placeholder="@T["Type to search for content..."]"
-                                         @@search-change="asyncFind" @@select="onSelect"
-                                         :searchable="true" :close-on-select="true" :reset-after="true"
-                                         :show-labels="true" :hide-selected="false"
-                                         :disabled="isDisabled"
-                                         select-label="@T["Select"]" deselect-label="@T["Remove"]">
-                            <template slot="option" slot-scope="props">
-                                <div v-cloak><span>{{ props.option.displayText }}</span><span class="small ms-2" v-show="!props.option.hasPublished">(@T["Not published"])</span></div>
-                            </template>
-                            <template slot="noResult">
-                                @T["No result found"]
-                            </template>
-                        </vue-multiselect>
-                    </div>
-                </div>
-                <span asp-validation-for="VariantBContentItemId" class="text-danger"></span>
-                <div class="form-text">@T["Select the content item for the test variant."]</div>
-            </div>
-        </div>
-    </div>
-
-    <h5 class="mt-4">@T["Traffic Split"]</h5>
-    <div class="row align-items-center">
-        <div class="col-md-8">
-            <label asp-for="PercentageA" class="form-label">@T["Variant A Percentage"]</label>
-            <input asp-for="PercentageA" type="range" class="form-range" min="0" max="100" id="percentageSlider" />
-            <span asp-validation-for="PercentageA" class="text-danger"></span>
-        </div>
-        <div class="col-md-4">
-            <div class="d-flex justify-content-around">
-                <div class="text-center">
-                    <strong>@T["Variant A"]</strong>
-                    <div class="fs-4 text-primary" id="percentageADisplay">@Model.PercentageA%</div>
-                </div>
-                <div class="text-center">
-                    <strong>@T["Variant B"]</strong>
-                    <div class="fs-4 text-secondary" id="percentageBDisplay">@Model.PercentageB%</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="form-text">@T["Drag the slider to adjust the traffic split between variants."]</div>
-
-    <h5 class="mt-4">@T["Goal Configuration"]</h5>
-    @if (Model.AreGoalsLocked)
+    @if (!ViewData.ModelState.IsValid)
     {
-        <div class="alert alert-info mb-3">
-            <i class="fa-solid fa-lock me-2" aria-hidden="true"></i>
-            @T["Goal configuration is locked because this test is active and has tracked impressions. Changing goal settings after data collection has started would invalidate existing conversion data."]
-        </div>
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
     }
 
-    <div class="mb-3 w-50">
-        <label asp-for="GoalType" class="form-label">@T["Goal Type"]</label>
-        <select asp-for="GoalType" class="form-select" id="goalTypeSelect" disabled="@Model.AreGoalsLocked">
-            <option value="0">@T["No Goal (Track impressions only)"]</option>
-            <option value="1">@T["Button/Link Click"]</option>
-            <option value="2">@T["Form Submission"]</option>
-            <option value="3">@T["Scroll Percentage"]</option>
-            <option value="4">@T["Custom Event"]</option>
-        </select>
-        <span asp-validation-for="GoalType" class="text-danger"></span>
-    </div>
+    <ul class="nav nav-tabs">
+        <li class="nav-item pe-md-2">
+            <a class="nav-link active" id="test-tab" data-bs-toggle="tab" href="#test" role="tab" aria-controls="test" aria-selected="true">@T["Test"]</a>
+        </li>
+        <li class="nav-item pe-md-2">
+            <a class="nav-link" id="goal-tab" data-bs-toggle="tab" href="#goal" role="tab" aria-controls="goal">@T["Goal"]</a>
+        </li>
+        <li class="nav-item pe-md-2">
+            <a class="nav-link" id="statistics-tab" data-bs-toggle="tab" href="#statistics" role="tab" aria-controls="statistics">@T["Settings"]</a>
+        </li>
+    </ul>
 
-    <div class="mb-3 w-50" id="goalSelectorRow" style="display: none;">
-        <label asp-for="GoalSelector" class="form-label">@T["CSS Selector"]</label>
-        <input asp-for="GoalSelector" class="form-control" placeholder="@T["e.g., #signup-btn or .cta-button"]" disabled="@Model.AreGoalsLocked" />
-        <span asp-validation-for="GoalSelector" class="text-danger"></span>
-        <div class="form-text">@T["The CSS selector to identify the element(s) to track."]</div>
-    </div>
+    <div class="tab-content" id="tabs">
+        <!-- Test Tab -->
+        <div class="tab-pane fade show active" id="test" role="tabpanel" aria-labelledby="test-tab">
+            <div class="mb-3" asp-validation-class-for="Name">
+                <label asp-for="Name" class="form-label">@T["Test Name"]</label>
+                <input asp-for="Name" class="form-control" autofocus />
+                <span asp-validation-for="Name" class="text-danger"></span>
+                <div class="form-text">@T["A descriptive name for this A/B test."]</div>
+            </div>
 
-    <div class="mb-3 w-50" id="goalScrollRow" style="display: none;">
-        <label asp-for="GoalScrollPercentage" class="form-label">@T["Scroll Percentage"]</label>
-        <div class="input-group" style="max-width: 200px;">
-            <input asp-for="GoalScrollPercentage" type="number" min="0" max="100" class="form-control" disabled="@Model.AreGoalsLocked" />
-            <span class="input-group-text">%</span>
+            <h5 class="mt-4">@T["Variants"]</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3" asp-validation-class-for="VariantAContentItemId">
+                        <label asp-for="VariantAContentItemId" class="form-label">@T["Variant A (Control)"]</label>
+                        <div id="@variantAElementId" class="vue-multiselect" data-editor-type="ContentPicker" data-selected-items="@selectedVariantA" data-edit-url="@editUrl" data-view-url="@viewUrl" data-search-url="@searchUrl" data-multiple="false">
+                            <ul class="mb-1 list-group content-picker-default__list" v-show="arrayOfItems.length" v-cloak>
+                                <li v-for="(item, i) in arrayOfItems"
+                                    class="list-group-item content-picker-default__list-item d-flex align-items-start justify-content-between"
+                                    :key="item.id">
+                                    <div class="align-items-center align-self-center">
+                                        <a v-if="item.isClickable" :href="url(item)" target="_blank">
+                                            <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
+                                        </a>
+                                        <span v-else>
+                                            <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
+                                        </span>
+                                    </div>
+                                    <div class="btn-group btn-group-sm align-items-center" role="group">
+                                        <button v-on:click="remove(item)" type="button" class="btn btn-secondary content-picker-default__list-item__delete"><i class="fa-solid fa-trash fa-sm" aria-hidden="true"></i></button>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div>
+                                <input asp-for="VariantAContentItemId" type="hidden" v-model="selectedIds" />
+                                <vue-multiselect v-model="value" :options="options" track-by="id"
+                                                 label="displayText" placeholder="@T["Type to search for content..."]"
+                                                 @@search-change="asyncFind" @@select="onSelect"
+                                                 :searchable="true" :close-on-select="true" :reset-after="true"
+                                                 :show-labels="true" :hide-selected="false"
+                                                 :disabled="isDisabled"
+                                                 select-label="@T["Select"]" deselect-label="@T["Remove"]">
+                                    <template slot="option" slot-scope="props">
+                                        <div v-cloak><span>{{ props.option.displayText }}</span><span class="small ms-2" v-show="!props.option.hasPublished">(@T["Not published"])</span></div>
+                                    </template>
+                                    <template slot="noResult">
+                                        @T["No result found"]
+                                    </template>
+                                </vue-multiselect>
+                            </div>
+                        </div>
+                        <span asp-validation-for="VariantAContentItemId" class="text-danger"></span>
+                        <div class="form-text">@T["Select the content item for the control variant."]</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3" asp-validation-class-for="VariantBContentItemId">
+                        <label asp-for="VariantBContentItemId" class="form-label">@T["Variant B (Challenger)"]</label>
+                        <div id="@variantBElementId" class="vue-multiselect" data-editor-type="ContentPicker" data-selected-items="@selectedVariantB" data-edit-url="@editUrl" data-view-url="@viewUrl" data-search-url="@searchUrl" data-multiple="false">
+                            <ul class="mb-1 list-group content-picker-default__list" v-show="arrayOfItems.length" v-cloak>
+                                <li v-for="(item, i) in arrayOfItems"
+                                    class="list-group-item content-picker-default__list-item d-flex align-items-start justify-content-between"
+                                    :key="item.id">
+                                    <div class="align-items-center align-self-center">
+                                        <a v-if="item.isClickable" :href="url(item)" target="_blank">
+                                            <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
+                                        </a>
+                                        <span v-else>
+                                            <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
+                                        </span>
+                                    </div>
+                                    <div class="btn-group btn-group-sm align-items-center" role="group">
+                                        <button v-on:click="remove(item)" type="button" class="btn btn-secondary content-picker-default__list-item__delete"><i class="fa-solid fa-trash fa-sm" aria-hidden="true"></i></button>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div>
+                                <input asp-for="VariantBContentItemId" type="hidden" v-model="selectedIds" />
+                                <vue-multiselect v-model="value" :options="options" track-by="id"
+                                                 label="displayText" placeholder="@T["Type to search for content..."]"
+                                                 @@search-change="asyncFind" @@select="onSelect"
+                                                 :searchable="true" :close-on-select="true" :reset-after="true"
+                                                 :show-labels="true" :hide-selected="false"
+                                                 :disabled="isDisabled"
+                                                 select-label="@T["Select"]" deselect-label="@T["Remove"]">
+                                    <template slot="option" slot-scope="props">
+                                        <div v-cloak><span>{{ props.option.displayText }}</span><span class="small ms-2" v-show="!props.option.hasPublished">(@T["Not published"])</span></div>
+                                    </template>
+                                    <template slot="noResult">
+                                        @T["No result found"]
+                                    </template>
+                                </vue-multiselect>
+                            </div>
+                        </div>
+                        <span asp-validation-for="VariantBContentItemId" class="text-danger"></span>
+                        <div class="form-text">@T["Select the content item for the test variant."]</div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4">@T["Traffic Split"]</h5>
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <label asp-for="PercentageA" class="form-label">@T["Variant A Percentage"]</label>
+                    <input asp-for="PercentageA" type="range" class="form-range" min="0" max="100" id="percentageSlider" />
+                    <span asp-validation-for="PercentageA" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-around">
+                        <div class="text-center">
+                            <strong>@T["Variant A"]</strong>
+                            <div class="fs-4 text-primary" id="percentageADisplay">@Model.PercentageA%</div>
+                        </div>
+                        <div class="text-center">
+                            <strong>@T["Variant B"]</strong>
+                            <div class="fs-4 text-secondary" id="percentageBDisplay">@Model.PercentageB%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-text mb-3">@T["Drag the slider to adjust the traffic split between variants."]</div>
         </div>
-        <span asp-validation-for="GoalScrollPercentage" class="text-danger"></span>
-        <div class="form-text">@T["Track when user scrolls past this percentage of the page."]</div>
-    </div>
 
-    <div class="mb-3 w-50" id="goalEventRow" style="display: none;">
-        <label asp-for="GoalEventName" class="form-label">@T["Event Name"]</label>
-        <input asp-for="GoalEventName" class="form-control" placeholder="@T["e.g., purchase-completed"]" disabled="@Model.AreGoalsLocked" />
-        <span asp-validation-for="GoalEventName" class="text-danger"></span>
-        <div class="form-text">@T["The custom JavaScript event name to listen for. Trigger with: window.dispatchEvent(new Event('event-name'))"]</div>
-    </div>
+        <!-- Goal Tab -->
+        <div class="tab-pane fade" id="goal" role="tabpanel" aria-labelledby="goal-tab">
+            @if (Model.AreGoalsLocked)
+            {
+                <div class="alert alert-info mb-3">
+                    <i class="fa-solid fa-lock me-2" aria-hidden="true"></i>
+                    @T["Goal configuration is locked because this test is active and has tracked impressions. Changing goal settings after data collection has started would invalidate existing conversion data."]
+                </div>
+            }
 
-    @if (Model.AreGoalsLocked)
-    {
-        <input type="hidden" asp-for="GoalType" />
-        <input type="hidden" asp-for="GoalSelector" />
-        <input type="hidden" asp-for="GoalScrollPercentage" />
-        <input type="hidden" asp-for="GoalEventName" />
-    }
+            <div class="mb-3 w-50">
+                <label asp-for="GoalType" class="form-label">@T["Goal Type"]</label>
+                <select asp-for="GoalType" class="form-select" id="goalTypeSelect" disabled="@Model.AreGoalsLocked">
+                    <option value="0">@T["No Goal (Track impressions only)"]</option>
+                    <option value="1">@T["Button/Link Click"]</option>
+                    <option value="2">@T["Form Submission"]</option>
+                    <option value="3">@T["Scroll Percentage"]</option>
+                    <option value="4">@T["Custom Event"]</option>
+                </select>
+                <span asp-validation-for="GoalType" class="text-danger"></span>
+            </div>
 
-    <h5 class="mt-4">@T["Statistics Configuration"]</h5>
-    <div class="mb-3">
-        <label asp-for="MinimumSampleSize" class="form-label">@T["Minimum Sample Size"]</label>
-        <input asp-for="MinimumSampleSize" type="number" min="30" max="500" class="form-control" style="max-width: 200px;" />
-        <span asp-validation-for="MinimumSampleSize" class="text-danger"></span>
-        <div class="form-text">@T["Minimum impressions per variant required before statistical analysis. Lower values give faster results but less reliable statistics. (Range: 30-500, Default: 50)"]</div>
-    </div>
+            <div class="mb-3 w-50" id="goalSelectorRow" style="display: none;">
+                <label asp-for="GoalSelector" class="form-label">@T["CSS Selector"]</label>
+                <input asp-for="GoalSelector" class="form-control" placeholder="@T["e.g., #signup-btn or .cta-button"]" disabled="@Model.AreGoalsLocked" />
+                <span asp-validation-for="GoalSelector" class="text-danger"></span>
+                <div class="form-text">@T["The CSS selector to identify the element(s) to track."]</div>
+            </div>
 
-    <div class="mb-3">
-        <label asp-for="ConfidenceThreshold" class="form-label">@T["Confidence Threshold"]</label>
-        <select asp-for="ConfidenceThreshold" class="form-select" style="max-width: 200px;">
-            <option value="90">@T["90% (Faster results)"]</option>
-            <option value="95">@T["95% (Standard)"]</option>
-            <option value="99">@T["99% (Most reliable)"]</option>
-        </select>
-        <span asp-validation-for="ConfidenceThreshold" class="text-danger"></span>
-        <div class="form-text">@T["The confidence level required to declare a winning variant. Higher values require more evidence before declaring a winner."]</div>
+            <div class="mb-3 w-50" id="goalScrollRow" style="display: none;">
+                <label asp-for="GoalScrollPercentage" class="form-label">@T["Scroll Percentage"]</label>
+                <div class="input-group" style="max-width: 200px;">
+                    <input asp-for="GoalScrollPercentage" type="number" min="0" max="100" class="form-control" disabled="@Model.AreGoalsLocked" />
+                    <span class="input-group-text">%</span>
+                </div>
+                <span asp-validation-for="GoalScrollPercentage" class="text-danger"></span>
+                <div class="form-text">@T["Track when user scrolls past this percentage of the page."]</div>
+            </div>
+
+            <div class="mb-3 w-50" id="goalEventRow" style="display: none;">
+                <label asp-for="GoalEventName" class="form-label">@T["Event Name"]</label>
+                <input asp-for="GoalEventName" class="form-control" placeholder="@T["e.g., purchase-completed"]" disabled="@Model.AreGoalsLocked" />
+                <span asp-validation-for="GoalEventName" class="text-danger"></span>
+                <div class="form-text">@T["The custom JavaScript event name to listen for. Trigger with: window.dispatchEvent(new Event('event-name'))"]</div>
+            </div>
+
+            @if (Model.AreGoalsLocked)
+            {
+                <input type="hidden" asp-for="GoalType" />
+                <input type="hidden" asp-for="GoalSelector" />
+                <input type="hidden" asp-for="GoalScrollPercentage" />
+                <input type="hidden" asp-for="GoalEventName" />
+            }
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
+            <div class="mb-3">
+                <label asp-for="MinimumSampleSize" class="form-label">@T["Minimum Sample Size"]</label>
+                <input asp-for="MinimumSampleSize" type="number" min="30" max="500" class="form-control" style="max-width: 200px;" />
+                <span asp-validation-for="MinimumSampleSize" class="text-danger"></span>
+                <div class="form-text">@T["Minimum impressions per variant required before statistical analysis. Lower values give faster results but less reliable statistics. (Range: 30-500, Default: 50)"]</div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ConfidenceThreshold" class="form-label">@T["Confidence Threshold"]</label>
+                <select asp-for="ConfidenceThreshold" class="form-select" style="max-width: 200px;">
+                    <option value="90">@T["90% (Faster results)"]</option>
+                    <option value="95">@T["95% (Standard)"]</option>
+                    <option value="99">@T["99% (Most reliable)"]</option>
+                </select>
+                <span asp-validation-for="ConfidenceThreshold" class="text-danger"></span>
+                <div class="form-text">@T["The confidence level required to declare a winning variant. Higher values require more evidence before declaring a winner."]</div>
+            </div>
+        </div>
     </div>
 
     <div class="mb-3">
