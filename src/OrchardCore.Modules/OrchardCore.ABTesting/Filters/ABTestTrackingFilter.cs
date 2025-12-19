@@ -71,7 +71,7 @@ public sealed class ABTestTrackingFilter : IAsyncResultFilter
         }
 
         // Get the visitor's assigned variant (don't create new assignment, just get existing)
-        var assignedVariant = await _assignmentService.TryGetAssignmentAsync(testInfo.TestContentItemId);
+        var assignedVariant = await _assignmentService.TryGetAssignmentAsync(testInfo.TestId);
         if (!assignedVariant.HasValue)
         {
             // Visitor hasn't been assigned yet - this shouldn't normally happen
@@ -80,7 +80,7 @@ public sealed class ABTestTrackingFilter : IAsyncResultFilter
         }
 
         var variantName = assignedVariant.Value.ToString();
-        var testId = _jsEncoder.Encode(testInfo.TestContentItemId);
+        var testId = _jsEncoder.Encode(testInfo.TestId);
 
         // Inject impression tracking script
         var impressionScript = new HtmlString($@"<script>

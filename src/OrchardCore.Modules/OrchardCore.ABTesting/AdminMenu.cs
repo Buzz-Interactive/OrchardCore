@@ -6,12 +6,9 @@ namespace OrchardCore.ABTesting;
 
 public sealed class AdminMenu : AdminNavigationProvider
 {
-    private static readonly RouteValueDictionary _contentRouteValues = new()
+    private static readonly RouteValueDictionary _routeValues = new()
     {
-        { "contentTypeId", "ABTest" },
-        { "Area", "OrchardCore.Contents" },
-        { "Options.SelectedContentType", "ABTest" },
-        { "Options.CanCreateSelectedContentType", true },
+        { "Area", "OrchardCore.ABTesting" },
     };
 
     internal readonly IStringLocalizer S;
@@ -28,7 +25,7 @@ public sealed class AdminMenu : AdminNavigationProvider
                 .AddClass("abtests")
                 .Id("abtests")
                 .Permission(Permissions.ManageABTests)
-                .Action("List", "Admin", _contentRouteValues)
+                .Action("Index", "Admin", _routeValues)
                 .LocalNav()
             );
 

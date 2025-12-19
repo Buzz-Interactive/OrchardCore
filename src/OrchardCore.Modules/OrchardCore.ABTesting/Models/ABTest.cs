@@ -1,13 +1,43 @@
-using OrchardCore.ContentManagement;
+using OrchardCore.Entities;
 
 namespace OrchardCore.ABTesting.Models;
 
 /// <summary>
-/// Content part that provides A/B testing configuration.
-/// This part is attached to the ABTest content type.
+/// Standalone entity representing an A/B test.
+/// Stored in a custom YesSql collection (not as a content item).
 /// </summary>
-public class ABTestPart : ContentPart
+public class ABTest : Entity
 {
+    /// <summary>
+    /// The collection name for storing ABTest entities.
+    /// </summary>
+    public const string Collection = "ABTest";
+
+    /// <summary>
+    /// Unique identifier for the test (26-character format).
+    /// </summary>
+    public string TestId { get; set; }
+
+    /// <summary>
+    /// Display name of the A/B test.
+    /// </summary>
+    public string Name { get; set; }
+
+    /// <summary>
+    /// Whether the test is currently active (running).
+    /// </summary>
+    public bool IsActive { get; set; }
+
+    /// <summary>
+    /// The ContentItemId of Variant A.
+    /// </summary>
+    public string VariantAContentItemId { get; set; }
+
+    /// <summary>
+    /// The ContentItemId of Variant B.
+    /// </summary>
+    public string VariantBContentItemId { get; set; }
+
     /// <summary>
     /// The percentage of traffic that should be directed to Variant A.
     /// Variant B receives (100 - PercentageA)% of traffic.
@@ -47,4 +77,14 @@ public class ABTestPart : ContentPart
     /// Default is 90 (90% confidence).
     /// </summary>
     public int ConfidenceThreshold { get; set; } = 90;
+
+    /// <summary>
+    /// When the test was created.
+    /// </summary>
+    public DateTime CreatedUtc { get; set; }
+
+    /// <summary>
+    /// When the test was last modified.
+    /// </summary>
+    public DateTime? ModifiedUtc { get; set; }
 }

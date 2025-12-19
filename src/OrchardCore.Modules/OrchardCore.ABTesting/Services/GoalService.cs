@@ -22,9 +22,9 @@ public class GoalService : IGoalService
     }
 
     /// <inheritdoc />
-    public async Task RecordConversionAsync(string testContentItemId, ABVariant variant)
+    public async Task RecordConversionAsync(string testId, ABVariant variant)
     {
-        if (string.IsNullOrEmpty(testContentItemId))
+        if (string.IsNullOrEmpty(testId))
         {
             return;
         }
@@ -44,11 +44,11 @@ public class GoalService : IGoalService
                            $"{dialect.QuoteForColumnName("VariantAConversions")}, " +
                            $"{dialect.QuoteForColumnName("VariantBConversions")} " +
                            $"FROM {dialect.QuoteForTableName(tableName, configuration.Schema)} " +
-                           $"WHERE {dialect.QuoteForColumnName("TestContentItemId")} = @TestContentItemId";
+                           $"WHERE {dialect.QuoteForColumnName("TestId")} = @TestId";
 
             var existing = await connection.QueryFirstOrDefaultAsync<ABTestGoalRecord>(
                 selectSql,
-                new { TestContentItemId = testContentItemId },
+                new { TestId = testId },
                 transaction);
 
             if (existing != null)
@@ -68,14 +68,14 @@ public class GoalService : IGoalService
                 var variantBCount = variant == ABVariant.B ? 1 : 0;
 
                 var insertSql = $"INSERT INTO {dialect.QuoteForTableName(tableName, configuration.Schema)} " +
-                               $"({dialect.QuoteForColumnName("TestContentItemId")}, " +
+                               $"({dialect.QuoteForColumnName("TestId")}, " +
                                $"{dialect.QuoteForColumnName("VariantAConversions")}, " +
                                $"{dialect.QuoteForColumnName("VariantBConversions")}) " +
-                               $"VALUES (@TestContentItemId, @VariantAConversions, @VariantBConversions)";
+                               $"VALUES (@TestId, @VariantAConversions, @VariantBConversions)";
 
                 await connection.ExecuteAsync(insertSql, new
                 {
-                    TestContentItemId = testContentItemId,
+                    TestId = testId,
                     VariantAConversions = variantACount,
                     VariantBConversions = variantBCount,
                 }, transaction);
@@ -91,9 +91,9 @@ public class GoalService : IGoalService
     }
 
     /// <inheritdoc />
-    public async Task<(long VariantA, long VariantB)> GetConversionsAsync(string testContentItemId)
+    public async Task<(long VariantA, long VariantB)> GetConversionsAsync(string testId)
     {
-        if (string.IsNullOrEmpty(testContentItemId))
+        if (string.IsNullOrEmpty(testId))
         {
             return (0, 0);
         }
@@ -108,11 +108,11 @@ public class GoalService : IGoalService
         var selectSql = $"SELECT {dialect.QuoteForColumnName("VariantAConversions")}, " +
                        $"{dialect.QuoteForColumnName("VariantBConversions")} " +
                        $"FROM {dialect.QuoteForTableName(tableName, configuration.Schema)} " +
-                       $"WHERE {dialect.QuoteForColumnName("TestContentItemId")} = @TestContentItemId";
+                       $"WHERE {dialect.QuoteForColumnName("TestId")} = @TestId";
 
         var record = await connection.QueryFirstOrDefaultAsync<ABTestGoalRecord>(
             selectSql,
-            new { TestContentItemId = testContentItemId });
+            new { TestId = testId });
 
         if (record == null)
         {

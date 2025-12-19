@@ -1,24 +1,17 @@
 using OrchardCore.ABTesting.Models;
-using OrchardCore.ABTesting.Records;
-using OrchardCore.ContentManagement;
-using YesSql;
 
 namespace OrchardCore.ABTesting.Services;
 
 /// <summary>
-/// Service for looking up A/B tests using the ABTestIndex.
+/// Service for looking up A/B tests using the ABTestManager.
 /// </summary>
 public class ABTestLookupService : IABTestLookupService
 {
-    private readonly ISession _session;
-    private readonly IContentManager _contentManager;
+    private readonly IABTestManager _abTestManager;
 
-    public ABTestLookupService(
-        ISession session,
-        IContentManager contentManager)
+    public ABTestLookupService(IABTestManager abTestManager)
     {
-        _session = session;
-        _contentManager = contentManager;
+        _abTestManager = abTestManager;
     }
 
     /// <inheritdoc />
@@ -29,103 +22,55 @@ public class ABTestLookupService : IABTestLookupService
             return null;
         }
 
-        // Find any published test that contains this content item as either variant
-        var index = await _session.QueryIndex<ABTestIndex>(i =>
-            i.Published &&
-            (i.VariantAContentItemId == contentItemId || i.VariantBContentItemId == contentItemId))
-            .FirstOrDefaultAsync();
-
-        if (index == null)
+        // Find any active test that contains this content item as either variant
+        var test = await _abTestManager.GetByVariantAsync(contentItemId);
+        if (test == null)
         {
             return null;
         }
 
-        // Get the test content item and extract goal properties
-        var testContentItem = await _contentManager.GetAsync(index.ABTestContentItemId, VersionOptions.Published);
-        var testName = testContentItem?.DisplayText ?? "Unnamed Test";
-        var abTestPart = testContentItem?.As<ABTestPart>();
-
-        return new ABTestInfo
-        {
-            TestContentItemId = index.ABTestContentItemId,
-            TestName = testName,
-            VariantAContentItemId = index.VariantAContentItemId,
-            VariantBContentItemId = index.VariantBContentItemId,
-            PercentageA = index.PercentageA,
-            IsVariantA = index.VariantAContentItemId == contentItemId,
-            GoalType = abTestPart?.GoalType ?? GoalType.None,
-            GoalSelector = abTestPart?.GoalSelector,
-            GoalScrollPercentage = abTestPart?.GoalScrollPercentage ?? 50,
-            GoalEventName = abTestPart?.GoalEventName,
-        };
+        return MapToInfo(test, contentItemId);
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<ABTestInfo>> GetActiveTestsAsync()
     {
-        var indexes = await _session.QueryIndex<ABTestIndex>(i =>
-            i.Published)
-            .ListAsync();
+        var tests = await _abTestManager.GetActiveAsync();
 
-        var results = new List<ABTestInfo>();
-
-        foreach (var index in indexes)
-        {
-            var testContentItem = await _contentManager.GetAsync(index.ABTestContentItemId, VersionOptions.Published);
-            var testName = testContentItem?.DisplayText ?? "Unnamed Test";
-            var abTestPart = testContentItem?.As<ABTestPart>();
-
-            results.Add(new ABTestInfo
-            {
-                TestContentItemId = index.ABTestContentItemId,
-                TestName = testName,
-                VariantAContentItemId = index.VariantAContentItemId,
-                VariantBContentItemId = index.VariantBContentItemId,
-                PercentageA = index.PercentageA,
-                IsVariantA = true, // Default, not relevant for listing
-                GoalType = abTestPart?.GoalType ?? GoalType.None,
-                GoalSelector = abTestPart?.GoalSelector,
-                GoalScrollPercentage = abTestPart?.GoalScrollPercentage ?? 50,
-                GoalEventName = abTestPart?.GoalEventName,
-            });
-        }
-
-        return results;
+        return tests.Select(test => MapToInfo(test, null));
     }
 
     /// <inheritdoc />
-    public async Task<ABTestInfo> GetTestByIdAsync(string testContentItemId)
+    public async Task<ABTestInfo> GetTestByIdAsync(string testId)
     {
-        if (string.IsNullOrEmpty(testContentItemId))
+        if (string.IsNullOrEmpty(testId))
         {
             return null;
         }
 
-        var index = await _session.QueryIndex<ABTestIndex>(i =>
-            i.ABTestContentItemId == testContentItemId && i.Published)
-            .FirstOrDefaultAsync();
-
-        if (index == null)
+        var test = await _abTestManager.GetAsync(testId);
+        if (test == null || !test.IsActive)
         {
             return null;
         }
 
-        var testContentItem = await _contentManager.GetAsync(index.ABTestContentItemId, VersionOptions.Published);
-        var testName = testContentItem?.DisplayText ?? "Unnamed Test";
-        var abTestPart = testContentItem?.As<ABTestPart>();
+        return MapToInfo(test, null);
+    }
 
+    private static ABTestInfo MapToInfo(ABTest test, string requestedContentItemId)
+    {
         return new ABTestInfo
         {
-            TestContentItemId = index.ABTestContentItemId,
-            TestName = testName,
-            VariantAContentItemId = index.VariantAContentItemId,
-            VariantBContentItemId = index.VariantBContentItemId,
-            PercentageA = index.PercentageA,
-            IsVariantA = true,
-            GoalType = abTestPart?.GoalType ?? GoalType.None,
-            GoalSelector = abTestPart?.GoalSelector,
-            GoalScrollPercentage = abTestPart?.GoalScrollPercentage ?? 50,
-            GoalEventName = abTestPart?.GoalEventName,
+            TestId = test.TestId,
+            TestName = test.Name ?? "Unnamed Test",
+            VariantAContentItemId = test.VariantAContentItemId,
+            VariantBContentItemId = test.VariantBContentItemId,
+            PercentageA = test.PercentageA,
+            IsVariantA = requestedContentItemId == null || test.VariantAContentItemId == requestedContentItemId,
+            GoalType = test.GoalType,
+            GoalSelector = test.GoalSelector,
+            GoalScrollPercentage = test.GoalScrollPercentage,
+            GoalEventName = test.GoalEventName,
         };
     }
 }

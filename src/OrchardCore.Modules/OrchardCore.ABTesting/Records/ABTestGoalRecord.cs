@@ -11,9 +11,9 @@ public class ABTestGoalRecord
     public int Id { get; set; }
 
     /// <summary>
-    /// The ContentItemId of the ABTest content item.
+    /// The unique identifier of the ABTest entity.
     /// </summary>
-    public string TestContentItemId { get; set; }
+    public string TestId { get; set; }
 
     /// <summary>
     /// The number of conversions for Variant A.

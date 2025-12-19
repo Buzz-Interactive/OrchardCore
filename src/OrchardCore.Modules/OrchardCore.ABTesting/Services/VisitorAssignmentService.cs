@@ -44,7 +44,7 @@ public class VisitorAssignmentService : IVisitorAssignmentService
     }
 
     /// <inheritdoc />
-    public async Task<ABVariant> GetOrAssignVariantAsync(string testContentItemId, int percentageA)
+    public async Task<ABVariant> GetOrAssignVariantAsync(string testId, int percentageA)
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext == null)
@@ -54,26 +54,26 @@ public class VisitorAssignmentService : IVisitorAssignmentService
         }
 
         // Check for existing assignment
-        var existingAssignment = TryGetAssignmentFromStorage(testContentItemId);
+        var existingAssignment = TryGetAssignmentFromStorage(testId);
         if (existingAssignment.HasValue)
         {
             return existingAssignment.Value;
         }
 
         // Get effective percentage based on impression balancing
-        var effectivePercentageA = await GetBalancedPercentageAsync(testContentItemId, percentageA);
+        var effectivePercentageA = await GetBalancedPercentageAsync(testId, percentageA);
 
         // Select new variant based on balanced percentage
         var selectedVariant = SelectVariantByPercentage(effectivePercentageA);
 
         // Store assignment
-        StoreAssignment(testContentItemId, selectedVariant);
+        StoreAssignment(testId, selectedVariant);
 
         return selectedVariant;
     }
 
     /// <inheritdoc />
-    public Task<ABVariant?> TryGetAssignmentAsync(string testContentItemId)
+    public Task<ABVariant?> TryGetAssignmentAsync(string testId)
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext == null)
@@ -81,7 +81,7 @@ public class VisitorAssignmentService : IVisitorAssignmentService
             return Task.FromResult<ABVariant?>(null);
         }
 
-        return Task.FromResult(TryGetAssignmentFromStorage(testContentItemId));
+        return Task.FromResult(TryGetAssignmentFromStorage(testId));
     }
 
     /// <inheritdoc />
@@ -108,20 +108,20 @@ public class VisitorAssignmentService : IVisitorAssignmentService
         return Task.CompletedTask;
     }
 
-    private ABVariant? TryGetAssignmentFromStorage(string testContentItemId)
+    private ABVariant? TryGetAssignmentFromStorage(string testId)
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
         // First check HttpContext.Items for assignments made during this request
         // This handles the case where assignment was just made but cookie isn't available yet
         if (httpContext?.Items[HttpContextItemsKey] is Dictionary<string, ABVariant> currentRequestAssignments &&
-            currentRequestAssignments.TryGetValue(testContentItemId, out var currentRequestVariant))
+            currentRequestAssignments.TryGetValue(testId, out var currentRequestVariant))
         {
             return currentRequestVariant;
         }
 
         var assignments = GetAssignments();
-        if (assignments.TryGetValue(testContentItemId, out var variantString))
+        if (assignments.TryGetValue(testId, out var variantString))
         {
             if (Enum.TryParse<ABVariant>(variantString, out var variant))
             {
@@ -178,7 +178,7 @@ public class VisitorAssignmentService : IVisitorAssignmentService
         return new Dictionary<string, string>();
     }
 
-    private void StoreAssignment(string testContentItemId, ABVariant variant)
+    private void StoreAssignment(string testId, ABVariant variant)
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext == null)
@@ -194,10 +194,10 @@ public class VisitorAssignmentService : IVisitorAssignmentService
             currentRequestAssignments = new Dictionary<string, ABVariant>();
             httpContext.Items[HttpContextItemsKey] = currentRequestAssignments;
         }
-        currentRequestAssignments[testContentItemId] = variant;
+        currentRequestAssignments[testId] = variant;
 
         var assignments = GetAssignments();
-        assignments[testContentItemId] = variant.ToString();
+        assignments[testId] = variant.ToString();
         var json = JsonSerializer.Serialize(assignments);
 
         // Store in cookie if tracking is allowed
@@ -254,9 +254,9 @@ public class VisitorAssignmentService : IVisitorAssignmentService
     /// Calculates the effective percentage for Variant A based on current impressions.
     /// Adjusts the target percentage to balance impression counts.
     /// </summary>
-    private async Task<int> GetBalancedPercentageAsync(string testContentItemId, int targetPercentageA)
+    private async Task<int> GetBalancedPercentageAsync(string testId, int targetPercentageA)
     {
-        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(testContentItemId);
+        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(testId);
         var totalImpressions = impressionsA + impressionsB;
 
         // If no impressions yet, use the target percentage

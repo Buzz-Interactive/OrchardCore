@@ -23,9 +23,9 @@ public interface IABTestLookupService
     Task<IEnumerable<ABTestInfo>> GetActiveTestsAsync();
 
     /// <summary>
-    /// Gets a specific A/B test by its ContentItemId.
+    /// Gets a specific A/B test by its unique identifier.
     /// </summary>
-    /// <param name="testContentItemId">The ContentItemId of the ABTest.</param>
+    /// <param name="testId">The TestId of the ABTest.</param>
     /// <returns>ABTestInfo if found, null otherwise.</returns>
-    Task<ABTestInfo> GetTestByIdAsync(string testContentItemId);
+    Task<ABTestInfo> GetTestByIdAsync(string testId);
 }

@@ -1,92 +1,351 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
 using OrchardCore.ABTesting.Models;
 using OrchardCore.ABTesting.Services;
+using OrchardCore.ABTesting.ViewModels;
 using OrchardCore.Admin;
-using OrchardCore.ContentFields.Fields;
 using OrchardCore.ContentManagement;
 using OrchardCore.DisplayManagement;
+using OrchardCore.DisplayManagement.Notify;
 
 namespace OrchardCore.ABTesting.Controllers;
 
-[Admin("ABTesting/{action}/{contentItemId?}", "ABTesting.{action}")]
+[Admin("ABTesting/{action}/{testId?}", "ABTesting.{action}")]
 public class AdminController : Controller
 {
+    private readonly IABTestManager _abTestManager;
     private readonly IContentManager _contentManager;
     private readonly IImpressionService _impressionService;
     private readonly IGoalService _goalService;
     private readonly IStatisticalAnalysisService _statisticalAnalysisService;
     private readonly IAuthorizationService _authorizationService;
     private readonly IShapeFactory _shapeFactory;
+    private readonly INotifier _notifier;
+    private readonly IHtmlLocalizer H;
 
     public AdminController(
+        IABTestManager abTestManager,
         IContentManager contentManager,
         IImpressionService impressionService,
         IGoalService goalService,
         IStatisticalAnalysisService statisticalAnalysisService,
         IAuthorizationService authorizationService,
-        IShapeFactory shapeFactory)
+        IShapeFactory shapeFactory,
+        INotifier notifier,
+        IHtmlLocalizer<AdminController> htmlLocalizer)
     {
+        _abTestManager = abTestManager;
         _contentManager = contentManager;
         _impressionService = impressionService;
         _goalService = goalService;
         _statisticalAnalysisService = statisticalAnalysisService;
         _authorizationService = authorizationService;
         _shapeFactory = shapeFactory;
+        _notifier = notifier;
+        H = htmlLocalizer;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Results(string contentItemId)
+    public async Task<IActionResult> Index()
     {
-        if (string.IsNullOrEmpty(contentItemId))
-        {
-            return NotFound();
-        }
-
-        // Check permissions
         if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
         {
             return Forbid();
         }
 
-        // Load the ABTest content item
-        var contentItem = await _contentManager.GetAsync(contentItemId, VersionOptions.Latest);
-        if (contentItem == null || contentItem.ContentType != "ABTest")
+        var tests = await _abTestManager.GetAllAsync();
+        var entries = new List<ABTestEntry>();
+
+        foreach (var test in tests)
+        {
+            var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(test.TestId);
+            var (conversionsA, conversionsB) = await _goalService.GetConversionsAsync(test.TestId);
+
+            var variantAName = await GetContentDisplayTextAsync(test.VariantAContentItemId);
+            var variantBName = await GetContentDisplayTextAsync(test.VariantBContentItemId);
+
+            entries.Add(new ABTestEntry
+            {
+                TestId = test.TestId,
+                Name = test.Name ?? "Unnamed Test",
+                IsActive = test.IsActive,
+                VariantADisplayText = variantAName,
+                VariantBDisplayText = variantBName,
+                PercentageA = test.PercentageA,
+                TotalImpressions = impressionsA + impressionsB,
+                TotalConversions = conversionsA + conversionsB,
+                CreatedUtc = test.CreatedUtc,
+            });
+        }
+
+        var viewModel = new ABTestIndexViewModel
+        {
+            Tests = entries,
+        };
+
+        return View(viewModel);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Create()
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        var viewModel = new ABTestViewModel();
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(ABTestViewModel viewModel)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(viewModel);
+        }
+
+        // Validate variants are different
+        if (viewModel.VariantAContentItemId == viewModel.VariantBContentItemId)
+        {
+            ModelState.AddModelError(nameof(viewModel.VariantBContentItemId), "Variant A and Variant B must be different.");
+            return View(viewModel);
+        }
+
+        // Validate goal configuration
+        if (!ValidateGoalConfiguration(viewModel))
+        {
+            return View(viewModel);
+        }
+
+        var test = new ABTest
+        {
+            Name = viewModel.Name,
+            VariantAContentItemId = viewModel.VariantAContentItemId,
+            VariantBContentItemId = viewModel.VariantBContentItemId,
+            PercentageA = viewModel.PercentageA,
+            GoalType = viewModel.GoalType,
+            GoalSelector = viewModel.GoalSelector,
+            GoalScrollPercentage = viewModel.GoalScrollPercentage,
+            GoalEventName = viewModel.GoalEventName,
+            MinimumSampleSize = viewModel.MinimumSampleSize,
+            ConfidenceThreshold = viewModel.ConfidenceThreshold,
+        };
+
+        await _abTestManager.CreateAsync(test);
+
+        await _notifier.SuccessAsync(H["A/B Test created successfully."]);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(string testId)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        var test = await _abTestManager.GetAsync(testId);
+        if (test == null)
         {
             return NotFound();
         }
 
-        var abTestPart = contentItem.As<ABTestPart>();
-        if (abTestPart == null)
+        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(testId);
+        var (conversionsA, conversionsB) = await _goalService.GetConversionsAsync(testId);
+        var totalImpressions = impressionsA + impressionsB;
+
+        var viewModel = new ABTestViewModel
+        {
+            TestId = test.TestId,
+            Name = test.Name,
+            VariantAContentItemId = test.VariantAContentItemId,
+            VariantBContentItemId = test.VariantBContentItemId,
+            VariantADisplayText = await GetContentDisplayTextAsync(test.VariantAContentItemId),
+            VariantBDisplayText = await GetContentDisplayTextAsync(test.VariantBContentItemId),
+            PercentageA = test.PercentageA,
+            GoalType = test.GoalType,
+            GoalSelector = test.GoalSelector,
+            GoalScrollPercentage = test.GoalScrollPercentage,
+            GoalEventName = test.GoalEventName,
+            MinimumSampleSize = test.MinimumSampleSize,
+            ConfidenceThreshold = test.ConfidenceThreshold,
+            IsActive = test.IsActive,
+            TotalImpressions = totalImpressions,
+            TotalConversions = conversionsA + conversionsB,
+            AreGoalsLocked = test.IsActive && totalImpressions > 0,
+            CreatedUtc = test.CreatedUtc,
+        };
+
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(ABTestViewModel viewModel)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        var test = await _abTestManager.GetAsync(viewModel.TestId);
+        if (test == null)
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            await PopulateViewModelDisplayData(viewModel);
+            return View(viewModel);
+        }
+
+        // Validate variants are different
+        if (viewModel.VariantAContentItemId == viewModel.VariantBContentItemId)
+        {
+            ModelState.AddModelError(nameof(viewModel.VariantBContentItemId), "Variant A and Variant B must be different.");
+            await PopulateViewModelDisplayData(viewModel);
+            return View(viewModel);
+        }
+
+        // Check if goals are locked
+        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(viewModel.TestId);
+        var totalImpressions = impressionsA + impressionsB;
+        var areGoalsLocked = test.IsActive && totalImpressions > 0;
+
+        // Validate goal configuration only if not locked
+        if (!areGoalsLocked && !ValidateGoalConfiguration(viewModel))
+        {
+            await PopulateViewModelDisplayData(viewModel);
+            return View(viewModel);
+        }
+
+        // Update the test
+        test.Name = viewModel.Name;
+        test.VariantAContentItemId = viewModel.VariantAContentItemId;
+        test.VariantBContentItemId = viewModel.VariantBContentItemId;
+        test.PercentageA = viewModel.PercentageA;
+        test.MinimumSampleSize = viewModel.MinimumSampleSize;
+        test.ConfidenceThreshold = viewModel.ConfidenceThreshold;
+
+        // Only update goals if not locked
+        if (!areGoalsLocked)
+        {
+            test.GoalType = viewModel.GoalType;
+            test.GoalSelector = viewModel.GoalSelector;
+            test.GoalScrollPercentage = viewModel.GoalScrollPercentage;
+            test.GoalEventName = viewModel.GoalEventName;
+        }
+
+        await _abTestManager.UpdateAsync(test);
+
+        await _notifier.SuccessAsync(H["A/B Test updated successfully."]);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(string testId)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        var test = await _abTestManager.GetAsync(testId);
+        if (test == null)
+        {
+            return NotFound();
+        }
+
+        await _abTestManager.DeleteAsync(testId);
+
+        await _notifier.SuccessAsync(H["A/B Test deleted successfully."]);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Activate(string testId)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            await _abTestManager.ActivateAsync(testId);
+            await _notifier.SuccessAsync(H["A/B Test activated successfully."]);
+        }
+        catch (InvalidOperationException ex)
+        {
+            await _notifier.ErrorAsync(H[ex.Message]);
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Deactivate(string testId)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            await _abTestManager.DeactivateAsync(testId);
+            await _notifier.SuccessAsync(H["A/B Test deactivated successfully."]);
+        }
+        catch (InvalidOperationException ex)
+        {
+            await _notifier.ErrorAsync(H[ex.Message]);
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Results(string testId)
+    {
+        if (string.IsNullOrEmpty(testId))
+        {
+            return NotFound();
+        }
+
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        var test = await _abTestManager.GetAsync(testId);
+        if (test == null)
         {
             return NotFound();
         }
 
         // Get impression counts
-        var (variantAImpressions, variantBImpressions) = await _impressionService.GetImpressionsAsync(contentItemId);
+        var (variantAImpressions, variantBImpressions) = await _impressionService.GetImpressionsAsync(testId);
 
         // Get variant names
-        var variantAField = abTestPart.Get<ContentPickerField>("VariantA");
-        var variantBField = abTestPart.Get<ContentPickerField>("VariantB");
-
-        string variantAName = "(Not selected)";
-        string variantAContentItemId = null;
-        string variantBName = "(Not selected)";
-        string variantBContentItemId = null;
-
-        if (variantAField?.ContentItemIds?.Length > 0)
-        {
-            variantAContentItemId = variantAField.ContentItemIds[0];
-            var variantA = await _contentManager.GetAsync(variantAField.ContentItemIds[0], VersionOptions.Latest);
-            variantAName = variantA?.DisplayText ?? "(Not found)";
-        }
-
-        if (variantBField?.ContentItemIds?.Length > 0)
-        {
-            variantBContentItemId = variantBField.ContentItemIds[0];
-            var variantB = await _contentManager.GetAsync(variantBField.ContentItemIds[0], VersionOptions.Latest);
-            variantBName = variantB?.DisplayText ?? "(Not found)";
-        }
+        var variantAName = await GetContentDisplayTextAsync(test.VariantAContentItemId);
+        var variantBName = await GetContentDisplayTextAsync(test.VariantBContentItemId);
 
         // Calculate percentages
         var totalImpressions = variantAImpressions + variantBImpressions;
@@ -98,7 +357,7 @@ public class AdminController : Controller
             : 0;
 
         // Get conversion counts
-        var (variantAConversions, variantBConversions) = await _goalService.GetConversionsAsync(contentItemId);
+        var (variantAConversions, variantBConversions) = await _goalService.GetConversionsAsync(testId);
         var totalConversions = variantAConversions + variantBConversions;
 
         // Calculate conversion rates (conversions / impressions)
@@ -110,36 +369,36 @@ public class AdminController : Controller
             : 0;
 
         // Get goal display name based on type
-        var goalDisplayName = GetDefaultGoalName(abTestPart.GoalType);
+        var goalDisplayName = GetDefaultGoalName(test.GoalType);
 
         // Perform statistical analysis (only meaningful when there's a goal)
-        var statistics = abTestPart.GoalType != GoalType.None
+        var statistics = test.GoalType != GoalType.None
             ? _statisticalAnalysisService.Analyze(
                 variantAImpressions,
                 variantBImpressions,
                 variantAConversions,
                 variantBConversions,
-                abTestPart.MinimumSampleSize,
-                abTestPart.ConfidenceThreshold)
+                test.MinimumSampleSize,
+                test.ConfidenceThreshold)
             : null;
 
         // Build shape with all the data
         var shape = await _shapeFactory.New.ABTestResults(
-            TestName: contentItem.DisplayText ?? "Unnamed Test",
-            TestContentItemId: contentItemId,
-            TargetPercentageA: abTestPart.PercentageA,
-            TargetPercentageB: 100 - abTestPart.PercentageA,
-            IsPublished: contentItem.Published,
+            TestName: test.Name ?? "Unnamed Test",
+            TestId: testId,
+            TargetPercentageA: test.PercentageA,
+            TargetPercentageB: 100 - test.PercentageA,
+            IsActive: test.IsActive,
             VariantAName: variantAName,
-            VariantAContentItemId: variantAContentItemId,
+            VariantAContentItemId: test.VariantAContentItemId,
             VariantAImpressions: variantAImpressions,
             VariantAPercentage: variantAPercentage,
             VariantBName: variantBName,
-            VariantBContentItemId: variantBContentItemId,
+            VariantBContentItemId: test.VariantBContentItemId,
             VariantBImpressions: variantBImpressions,
             VariantBPercentage: variantBPercentage,
             TotalImpressions: totalImpressions,
-            GoalType: abTestPart.GoalType,
+            GoalType: test.GoalType,
             GoalDisplayName: goalDisplayName,
             VariantAConversions: variantAConversions,
             VariantBConversions: variantBConversions,
@@ -150,6 +409,69 @@ public class AdminController : Controller
         );
 
         return View(shape);
+    }
+
+    private async Task<string> GetContentDisplayTextAsync(string contentItemId)
+    {
+        if (string.IsNullOrEmpty(contentItemId))
+        {
+            return "(Not selected)";
+        }
+
+        var contentItem = await _contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+        return contentItem?.DisplayText ?? "(Not found)";
+    }
+
+    private async Task PopulateViewModelDisplayData(ABTestViewModel viewModel)
+    {
+        viewModel.VariantADisplayText = await GetContentDisplayTextAsync(viewModel.VariantAContentItemId);
+        viewModel.VariantBDisplayText = await GetContentDisplayTextAsync(viewModel.VariantBContentItemId);
+
+        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(viewModel.TestId);
+        var (conversionsA, conversionsB) = await _goalService.GetConversionsAsync(viewModel.TestId);
+        viewModel.TotalImpressions = impressionsA + impressionsB;
+        viewModel.TotalConversions = conversionsA + conversionsB;
+
+        var test = await _abTestManager.GetAsync(viewModel.TestId);
+        if (test != null)
+        {
+            viewModel.IsActive = test.IsActive;
+            viewModel.AreGoalsLocked = test.IsActive && viewModel.TotalImpressions > 0;
+            viewModel.CreatedUtc = test.CreatedUtc;
+        }
+    }
+
+    private bool ValidateGoalConfiguration(ABTestViewModel viewModel)
+    {
+        switch (viewModel.GoalType)
+        {
+            case GoalType.ButtonLinkClick:
+            case GoalType.FormSubmission:
+                if (string.IsNullOrWhiteSpace(viewModel.GoalSelector))
+                {
+                    ModelState.AddModelError(nameof(viewModel.GoalSelector), "CSS selector is required for this goal type.");
+                    return false;
+                }
+                break;
+
+            case GoalType.ScrollPercentage:
+                if (viewModel.GoalScrollPercentage < 0 || viewModel.GoalScrollPercentage > 100)
+                {
+                    ModelState.AddModelError(nameof(viewModel.GoalScrollPercentage), "Scroll percentage must be between 0 and 100.");
+                    return false;
+                }
+                break;
+
+            case GoalType.CustomEvent:
+                if (string.IsNullOrWhiteSpace(viewModel.GoalEventName))
+                {
+                    ModelState.AddModelError(nameof(viewModel.GoalEventName), "Event name is required for custom event goals.");
+                    return false;
+                }
+                break;
+        }
+
+        return true;
     }
 
     private static string GetDefaultGoalName(GoalType goalType)

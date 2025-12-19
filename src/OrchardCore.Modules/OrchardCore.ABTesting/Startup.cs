@@ -2,20 +2,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using OrchardCore.ABTesting.Drivers;
 using OrchardCore.ABTesting.Filters;
-using OrchardCore.ABTesting.Handlers;
 using OrchardCore.ABTesting.Indexes;
 using OrchardCore.ABTesting.Middleware;
 using OrchardCore.ABTesting.Models;
 using OrchardCore.ABTesting.Services;
-using OrchardCore.ContentManagement;
-using OrchardCore.ContentManagement.Display.ContentDisplay;
-using OrchardCore.ContentManagement.Handlers;
 using OrchardCore.Data;
 using OrchardCore.Data.Migration;
-using OrchardCore.DisplayManagement;
-using OrchardCore.DisplayManagement.Handlers;
 using OrchardCore.Modules;
 using OrchardCore.Navigation;
 using OrchardCore.Security.Permissions;
@@ -26,12 +19,8 @@ public sealed class Startup : StartupBase
 {
     public override void ConfigureServices(IServiceCollection services)
     {
-        // Register the content part
-        services.AddContentPart<ABTestPart>()
-            .UseDisplayDriver<ABTestPartDisplayDriver>()
-            .AddHandler<ABTestPartHandler>();
-
         // Register services
+        services.AddScoped<IABTestManager, ABTestManager>();
         services.AddScoped<IABTestLookupService, ABTestLookupService>();
         services.AddScoped<IImpressionService, ImpressionService>();
         services.AddScoped<IGoalService, GoalService>();
@@ -39,19 +28,15 @@ public sealed class Startup : StartupBase
         services.AddScoped<IABTestContentResolver, ABTestContentResolver>();
         services.AddSingleton<IStatisticalAnalysisService, StatisticalAnalysisService>();
 
-        // Register display driver for results action menu
-        services.AddScoped<IContentDisplayDriver, ABTestResultsDisplayDriver>();
-
         // Register the tracking filter
         services.Configure<MvcOptions>(options =>
         {
             options.Filters.Add<ABTestTrackingFilter>();
         });
 
-        // Register the index provider
-        services.AddScoped<ABTestIndexProvider>();
-        services.AddScoped<IScopedIndexProvider>(sp => sp.GetRequiredService<ABTestIndexProvider>());
-        services.AddScoped<IContentHandler>(sp => sp.GetRequiredService<ABTestIndexProvider>());
+        // Register the ABTest collection and index provider
+        services.Configure<StoreCollectionOptions>(o => o.Collections.Add(ABTest.Collection));
+        services.AddIndexProvider<ABTestIndexProvider>();
 
         // Register migrations
         services.AddDataMigration<Migrations>();

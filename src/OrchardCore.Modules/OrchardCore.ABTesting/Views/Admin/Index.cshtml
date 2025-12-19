@@ -1,0 +1,134 @@
+@model ABTestIndexViewModel
+
+<zone Name="Title"><h1>@RenderTitleSegments(T["A/B Tests"])</h1></zone>
+
+@* the form is necessary to generate an antiforgery token for the delete, activate, and deactivate actions *@
+<form asp-action="Index" method="post" class="no-multisubmit">
+    <div class="card mb-3 text-bg-theme position-sticky action-bar">
+        <div class="card-body">
+            <div class="row gx-3">
+                <div class="col">
+                    <div class="has-search">
+                        <i class="fa-solid fa-search form-control-feedback" aria-hidden="true"></i>
+                        <input id="search-box" class="form-control" placeholder="@T["Search"]" type="search" autofocus />
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <a asp-action="Create" class="btn btn-secondary create" role="button">@T["Add A/B Test"]</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="list-group" id="abtest-list">
+        @if (Model.Tests.Any())
+        {
+            @foreach (var entry in Model.Tests)
+            {
+                var deleteMessage = T["Are you sure you want to delete this A/B test?"];
+                <li class="list-group-item" data-filter-value="@entry.Name.ToLowerInvariant()">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <strong class="me-2">@entry.Name</strong>
+                                @if (entry.IsActive)
+                                {
+                                    <span class="badge text-bg-success">@T["Active"]</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">@T["Inactive"]</span>
+                                }
+                            </div>
+                            <div class="text-muted small">
+                                <span class="me-3">
+                                    <strong>@T["Variant A:"]</strong> @entry.VariantADisplayText (@entry.PercentageA%)
+                                </span>
+                                <span class="me-3">
+                                    <strong>@T["Variant B:"]</strong> @entry.VariantBDisplayText (@(100 - entry.PercentageA)%)
+                                </span>
+                            </div>
+                            <div class="text-muted small mt-1">
+                                <span class="me-3">
+                                    <i class="fa-solid fa-eye me-1" aria-hidden="true"></i>@T["{0} impressions", entry.TotalImpressions]
+                                </span>
+                                <span class="me-3">
+                                    <i class="fa-solid fa-bullseye me-1" aria-hidden="true"></i>@T["{0} conversions", entry.TotalConversions]
+                                </span>
+                                <span>
+                                    <i class="fa-solid fa-calendar me-1" aria-hidden="true"></i>@T["Created {0}", entry.CreatedUtc.ToString("g")]
+                                </span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <a class="btn btn-info btn-sm" asp-action="Results" asp-route-testId="@entry.TestId" role="button">
+                                <i class="fa-solid fa-chart-bar me-1" aria-hidden="true"></i>@T["Results"]
+                            </a>
+                            <a class="btn btn-primary btn-sm" asp-action="Edit" asp-route-testId="@entry.TestId" role="button">@T["Edit"]</a>
+                            @if (entry.IsActive)
+                            {
+                                <button type="submit" class="btn btn-warning btn-sm" asp-action="Deactivate" asp-route-testId="@entry.TestId" data-url-af="UnsafeUrl">@T["Deactivate"]</button>
+                            }
+                            else
+                            {
+                                <button type="submit" class="btn btn-success btn-sm" asp-action="Activate" asp-route-testId="@entry.TestId" data-url-af="UnsafeUrl">@T["Activate"]</button>
+                            }
+                            <button type="submit" class="btn btn-danger btn-sm" asp-action="Delete" asp-route-testId="@entry.TestId" data-url-af="UnsafeUrl RemoveUrl" data-title="@T["Delete A/B Test"]" data-message="@deleteMessage">@T["Delete"]</button>
+                        </div>
+                    </div>
+                </li>
+            }
+        }
+        else
+        {
+            <li class="list-group-item">
+                <div class="alert alert-info mb-0" role="alert">
+                    @T["<strong>Nothing here!</strong> There are no A/B tests yet. Click 'Add A/B Test' to create your first test."]
+                </div>
+            </li>
+        }
+    </ul>
+    <div id="list-alert" class="alert alert-info d-none" role="alert">
+        @T["<strong>Nothing here!</strong> Your search returned no results."]
+    </div>
+</form>
+
+<script at="Foot">
+    $(function () {
+        var searchBox = $('#search-box');
+        var list = $('#abtest-list');
+
+        searchBox.keyup(function (e) {
+            var search = $(this).val().toLowerCase();
+            var elementsToFilter = list.find("[data-filter-value]");
+
+            if (e.key === "Escape" || search == '') {
+                searchBox.val('');
+                elementsToFilter.removeClass("d-none");
+                $('#list-alert').addClass("d-none");
+            }
+            else {
+                var visibleCount = 0;
+                elementsToFilter.each(function () {
+                    var text = $(this).data('filter-value').toLowerCase();
+                    var found = text.indexOf(search) > -1;
+
+                    if (found) {
+                        $(this).removeClass("d-none");
+                        visibleCount++;
+                    }
+                    else {
+                        $(this).addClass("d-none");
+                    }
+                });
+
+                if (visibleCount == 0) {
+                    $('#list-alert').removeClass("d-none");
+                }
+                else {
+                    $('#list-alert').addClass("d-none");
+                }
+            }
+        });
+    });
+</script>

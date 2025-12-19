@@ -36,7 +36,7 @@ public class ABTestContentResolver : IABTestContentResolver
 
         // Get or assign a variant for this visitor
         var assignedVariant = await _assignmentService.GetOrAssignVariantAsync(
-            testInfo.TestContentItemId,
+            testInfo.TestId,
             testInfo.PercentageA);
 
         // Return the content item ID of the assigned variant

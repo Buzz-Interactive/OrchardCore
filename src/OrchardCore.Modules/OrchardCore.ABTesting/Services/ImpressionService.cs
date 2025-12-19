@@ -22,9 +22,9 @@ public class ImpressionService : IImpressionService
     }
 
     /// <inheritdoc />
-    public async Task RecordImpressionAsync(string testContentItemId, ABVariant variant)
+    public async Task RecordImpressionAsync(string testId, ABVariant variant)
     {
-        if (string.IsNullOrEmpty(testContentItemId))
+        if (string.IsNullOrEmpty(testId))
         {
             return;
         }
@@ -44,11 +44,11 @@ public class ImpressionService : IImpressionService
                            $"{dialect.QuoteForColumnName("VariantAImpressions")}, " +
                            $"{dialect.QuoteForColumnName("VariantBImpressions")} " +
                            $"FROM {dialect.QuoteForTableName(tableName, configuration.Schema)} " +
-                           $"WHERE {dialect.QuoteForColumnName("TestContentItemId")} = @TestContentItemId";
+                           $"WHERE {dialect.QuoteForColumnName("TestId")} = @TestId";
 
             var existing = await connection.QueryFirstOrDefaultAsync<ABTestImpressionRecord>(
                 selectSql,
-                new { TestContentItemId = testContentItemId },
+                new { TestId = testId },
                 transaction);
 
             if (existing != null)
@@ -68,14 +68,14 @@ public class ImpressionService : IImpressionService
                 var variantBCount = variant == ABVariant.B ? 1 : 0;
 
                 var insertSql = $"INSERT INTO {dialect.QuoteForTableName(tableName, configuration.Schema)} " +
-                               $"({dialect.QuoteForColumnName("TestContentItemId")}, " +
+                               $"({dialect.QuoteForColumnName("TestId")}, " +
                                $"{dialect.QuoteForColumnName("VariantAImpressions")}, " +
                                $"{dialect.QuoteForColumnName("VariantBImpressions")}) " +
-                               $"VALUES (@TestContentItemId, @VariantAImpressions, @VariantBImpressions)";
+                               $"VALUES (@TestId, @VariantAImpressions, @VariantBImpressions)";
 
                 await connection.ExecuteAsync(insertSql, new
                 {
-                    TestContentItemId = testContentItemId,
+                    TestId = testId,
                     VariantAImpressions = variantACount,
                     VariantBImpressions = variantBCount,
                 }, transaction);
@@ -91,9 +91,9 @@ public class ImpressionService : IImpressionService
     }
 
     /// <inheritdoc />
-    public async Task<(long VariantA, long VariantB)> GetImpressionsAsync(string testContentItemId)
+    public async Task<(long VariantA, long VariantB)> GetImpressionsAsync(string testId)
     {
-        if (string.IsNullOrEmpty(testContentItemId))
+        if (string.IsNullOrEmpty(testId))
         {
             return (0, 0);
         }
@@ -108,11 +108,11 @@ public class ImpressionService : IImpressionService
         var selectSql = $"SELECT {dialect.QuoteForColumnName("VariantAImpressions")}, " +
                        $"{dialect.QuoteForColumnName("VariantBImpressions")} " +
                        $"FROM {dialect.QuoteForTableName(tableName, configuration.Schema)} " +
-                       $"WHERE {dialect.QuoteForColumnName("TestContentItemId")} = @TestContentItemId";
+                       $"WHERE {dialect.QuoteForColumnName("TestId")} = @TestId";
 
         var record = await connection.QueryFirstOrDefaultAsync<ABTestImpressionRecord>(
             selectSql,
-            new { TestContentItemId = testContentItemId });
+            new { TestId = testId });
 
         if (record == null)
         {

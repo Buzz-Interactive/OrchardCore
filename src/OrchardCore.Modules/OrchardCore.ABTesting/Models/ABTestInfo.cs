@@ -6,9 +6,9 @@ namespace OrchardCore.ABTesting.Models;
 public class ABTestInfo
 {
     /// <summary>
-    /// The ContentItemId of the ABTest content item.
+    /// The unique identifier of the ABTest entity.
     /// </summary>
-    public string TestContentItemId { get; set; }
+    public string TestId { get; set; }
 
     /// <summary>
     /// The display name of the test.
