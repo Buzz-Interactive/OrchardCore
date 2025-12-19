@@ -1,28 +1,6 @@
 @using OrchardCore.ABTesting.Models
 @{
-    string testName = Model.TestName;
-    string testContentItemId = Model.TestContentItemId;
-    int targetPercentageA = Model.TargetPercentageA;
-    int targetPercentageB = Model.TargetPercentageB;
-    string variantAName = Model.VariantAName;
-    string variantAContentItemId = Model.VariantAContentItemId;
-    long variantAImpressions = Model.VariantAImpressions;
-    double variantAPercentage = Model.VariantAPercentage;
-    string variantBName = Model.VariantBName;
-    string variantBContentItemId = Model.VariantBContentItemId;
-    long variantBImpressions = Model.VariantBImpressions;
-    double variantBPercentage = Model.VariantBPercentage;
-    long totalImpressions = Model.TotalImpressions;
-
-    // Goal-related data
-    GoalType goalType = Model.GoalType;
-    string goalDisplayName = Model.GoalDisplayName;
-    long variantAConversions = Model.VariantAConversions;
-    long variantBConversions = Model.VariantBConversions;
-    double variantAConversionRate = Model.VariantAConversionRate;
-    double variantBConversionRate = Model.VariantBConversionRate;
-    long totalConversions = Model.TotalConversions;
-    bool hasGoal = goalType != GoalType.None;
+    bool hasGoal = Model.GoalType != GoalType.None;
 
     // Statistical analysis
     ABTestStatisticsResult statistics = Model.Statistics;
@@ -55,179 +33,166 @@
     }
 }
 
-<div class="row mb-4">
-    <div class="col-md-3">
-
-            <div class="card">
-<div class="card-header">
-@T["Target Traffic Split"]
-</div>
-
-<div class="card-body">
-    <p class="h4">@T["A: {0}% / B: {1}%", targetPercentageA, targetPercentageB]</p>
-</div>
-
-</div>
-
-</div>
-
-    <div class="col-md-3">
-
-            <div class="card">
-<div class="card-header">
-@T["Total Impressions"]
-</div>
-
-<div class="card-body">
-    <p class="h4">@totalImpressions.ToString("N0")</p>
-</div>
-
-</div>
-
-</div>
-
+<div class="d-flex flex-wrap gap-4 mb-4 text-muted small">
+    <div>
+        <span>@T["Traffic Split:"]</span>
+        <strong class="text-body">@T["A: {0}% / B: {1}%", Model.TargetPercentageA, Model.TargetPercentageB]</strong>
+    </div>
+    <div>
+        <span>@T["Total Impressions:"]</span>
+        <strong class="text-body">@Model.TotalImpressions.ToString("N0")</strong>
+    </div>
     @if (hasGoal)
     {
-
-    <div class="col-md-3">
-
-            <div class="card">
-<div class="card-header">
-@T["Goal"]
-</div>
-
-<div class="card-body">
-     <p class="h4">@goalDisplayName</p>
-</div>
-
-</div>
-
-</div>
-
-    <div class="col-md-3">
-
-            <div class="card">
-<div class="card-header">
-@T["Total Conversions"]
-</div>
-
-<div class="card-body">
-     <p class="h4">@totalConversions.ToString("N0")</p>
-</div>
-
-</div>
-
-</div>
-
+        <div>
+            <span>@T["Goal:"]</span>
+            <strong class="text-body">@Model.GoalDisplayName</strong>
+        </div>
+        <div>
+            <span>@T["Total Conversions:"]</span>
+            <strong class="text-body">@Model.TotalConversions.ToString("N0")</strong>
+        </div>
     }
 </div>
 
-@if (totalImpressions == 0)
+@if (Model.TotalImpressions == 0)
 {
     <div class="alert alert-info">
         @T["No impressions have been recorded yet. Impressions are tracked when visitors view pages that are part of this A/B test."]
     </div>
 }
+else if (!hasGoal)
+{
+    <div class="alert alert-warning mb-4">
+        @T["No goal has been configured for this test. Configure a goal to track conversions and determine a winner."]
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>@T["Variation"]</th>
+                    <th class="text-end">@T["Sample Size"]</th>
+                    <th class="text-end">@T["Traffic %"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>@T["Control"]</strong>
+                        <br /><small class="text-muted">@Model.VariantAName</small>
+                    </td>
+                    <td class="text-end align-middle">@Model.VariantAImpressions.ToString("N0")</td>
+                    <td class="text-end align-middle">@Model.VariantAPercentage%</td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>@T["Challenger"]</strong>
+                        <br /><small class="text-muted">@Model.VariantBName</small>
+                    </td>
+                    <td class="text-end align-middle">@Model.VariantBImpressions.ToString("N0")</td>
+                    <td class="text-end align-middle">@Model.VariantBPercentage%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
 else
 {
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card @(isVariantAWinner ? "border-success" : "border-primary") mb-3">
-                <div class="card-header @(isVariantAWinner ? "bg-success" : "bg-primary") text-white d-flex justify-content-between align-items-center">
-                    <strong>@T["Variant A"]</strong>
-                    @if (isVariantAWinner)
-                    {
-                        <span class="badge bg-warning text-dark">
-                            <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Winner"]
-                        </span>
-                    }
-                </div>
-                <div class="card-body">
-                    <p class="mb-1">
-                        <strong>@variantAName</strong>
-                        @if (!string.IsNullOrEmpty(variantAContentItemId))
-                        {
-                            <a asp-route-area="OrchardCore.Contents" asp-controller="Admin" asp-action="Edit" asp-route-contentItemId="@variantAContentItemId" class="ms-2 small">
-                                <i class="fa-solid fa-edit" aria-hidden="true"></i> @T["Edit"]
-                            </a>
-                        }
-                    </p>
-                    <h3 class="mb-0">@variantAImpressions.ToString("N0")</h3>
-                    <small class="text-muted">@T["impressions"]</small>
-                    <div class="progress mt-3" style="height: 25px;">
-                        <div class="progress-bar @(isVariantAWinner ? "bg-success" : "bg-primary")" role="progressbar" style="width: @variantAPercentage%;" aria-valuenow="@variantAPercentage" aria-valuemin="0" aria-valuemax="100">
-                            @variantAPercentage%
-                        </div>
-                    </div>
-                    <small class="text-muted">
-                        @T["Actual: {0}% (Target: {1}%)", variantAPercentage, targetPercentageA]
-                    </small>
-
-                    @if (hasGoal)
-                    {
-                        <hr />
-                        <h4 class="mb-0">@variantAConversions.ToString("N0")</h4>
-                        <small class="text-muted">@T["conversions"]</small>
-                        <div class="progress mt-2" style="height: 20px;">
-                            <div class="progress-bar @(isVariantAWinner ? "bg-success" : "bg-warning")" role="progressbar" style="width: @(Math.Min(variantAConversionRate * 5, 100))%;" aria-valuenow="@variantAConversionRate" aria-valuemin="0" aria-valuemax="100">
-                                @variantAConversionRate%
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>@T["Variation"]</th>
+                    <th class="text-end">@T["Sample Size"]</th>
+                    <th class="text-end">@T["Conversions"]</th>
+                    <th class="text-end">@T["Conversion Rate"]</th>
+                    <th class="text-end">@T["Uplift"]</th>
+                    <th class="text-end">@T["Probability to Be Best"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="@(isVariantAWinner ? "table-success" : "")">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            @if (isVariantAWinner)
+                            {
+                                <i class="fa-solid fa-trophy text-warning me-2" aria-hidden="true"></i>
+                            }
+                            <div>
+                                <strong>@T["Control"]</strong>
+                                <br /><small class="text-muted">@Model.VariantAName</small>
                             </div>
                         </div>
-                        <small class="text-muted">
-                            @T["Conversion Rate: {0}%", variantAConversionRate]
-                        </small>
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card @(isVariantBWinner ? "border-success" : "border-primary") mb-3">
-                <div class="card-header @(isVariantBWinner ? "bg-success" : "bg-primary") text-white d-flex justify-content-between align-items-center">
-                    <strong>@T["Variant B"]</strong>
-                    @if (isVariantBWinner)
-                    {
-                        <span class="badge bg-warning text-dark">
-                            <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Winner"]
-                        </span>
-                    }
-                </div>
-                <div class="card-body">
-                    <p class="mb-1">
-                        <strong>@variantBName</strong>
-                        @if (!string.IsNullOrEmpty(variantBContentItemId))
+                    </td>
+                    <td class="text-end align-middle">@Model.VariantAImpressions.ToString("N0")</td>
+                    <td class="text-end align-middle">@Model.VariantAConversions.ToString("N0")</td>
+                    <td class="text-end align-middle">@Model.VariantAConversionRate%</td>
+                    <td class="text-end align-middle text-muted">@T["Baseline"]</td>
+                    <td class="text-end align-middle @(isVariantAWinner ? "bg-success bg-opacity-10" : "")">
+                        @if (statistics != null)
                         {
-                            <a asp-route-area="OrchardCore.Contents" asp-controller="Admin" asp-action="Edit" asp-route-contentItemId="@variantBContentItemId" class="ms-2 small">
-                                <i class="fa-solid fa-edit" aria-hidden="true"></i> @T["Edit"]
-                            </a>
+                            <strong>@statistics.ProbabilityToBeBestA%</strong>
                         }
-                    </p>
-                    <h3 class="mb-0">@variantBImpressions.ToString("N0")</h3>
-                    <small class="text-muted">@T["impressions"]</small>
-                    <div class="progress mt-3" style="height: 25px;">
-                        <div class="progress-bar @(isVariantBWinner ? "bg-success" : "bg-primary")" role="progressbar" style="width: @variantBPercentage%;" aria-valuenow="@variantBPercentage" aria-valuemin="0" aria-valuemax="100">
-                            @variantBPercentage%
-                        </div>
-                    </div>
-                    <small class="text-muted">
-                        @T["Actual: {0}% (Target: {1}%)", variantBPercentage, targetPercentageB]
-                    </small>
-
-                    @if (hasGoal)
-                    {
-                        <hr />
-                        <h4 class="mb-0">@variantBConversions.ToString("N0")</h4>
-                        <small class="text-muted">@T["conversions"]</small>
-                        <div class="progress mt-2" style="height: 20px;">
-                            <div class="progress-bar @(isVariantBWinner ? "bg-success" : "bg-warning")" role="progressbar" style="width: @(Math.Min(variantBConversionRate * 5, 100))%;" aria-valuenow="@variantBConversionRate" aria-valuemin="0" aria-valuemax="100">
-                                @variantBConversionRate%
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+                <tr class="@(isVariantBWinner ? "table-success" : "")">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            @if (isVariantBWinner)
+                            {
+                                <i class="fa-solid fa-trophy text-warning me-2" aria-hidden="true"></i>
+                            }
+                            <div>
+                                <strong>@T["Challenger"]</strong>
+                                <br /><small class="text-muted">@Model.VariantBName</small>
                             </div>
                         </div>
-                        <small class="text-muted">
-                            @T["Conversion Rate: {0}%", variantBConversionRate]
-                        </small>
-                    }
-                </div>
-            </div>
-        </div>
+                    </td>
+                    <td class="text-end align-middle">@Model.VariantBImpressions.ToString("N0")</td>
+                    <td class="text-end align-middle">@Model.VariantBConversions.ToString("N0")</td>
+                    <td class="text-end align-middle">@Model.VariantBConversionRate%</td>
+                    <td class="text-end align-middle">
+                        @if (statistics?.UpliftB != null)
+                        {
+                            var uplift = statistics.UpliftB.Value;
+                            var upliftClass = uplift > 0 ? "text-success" : (uplift < 0 ? "text-danger" : "text-muted");
+                            var upliftPrefix = uplift > 0 ? "+" : "";
+                            <span class="@upliftClass">
+                                <strong>@upliftPrefix@uplift%</strong>
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td class="text-end align-middle @(isVariantBWinner ? "bg-success bg-opacity-10" : "")">
+                        @if (statistics != null)
+                        {
+                            <strong>@statistics.ProbabilityToBeBestB%</strong>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
+
+    @if (statistics != null && statistics.IsSignificant)
+    {
+        <div class="mt-3">
+            <small class="text-muted">
+                <i class="fa-solid fa-check-circle text-success me-1" aria-hidden="true"></i>
+                @T["Statistical significance reached at {0}% confidence level", statistics.ConfidenceLevel]
+            </small>
+        </div>
+    }
 }

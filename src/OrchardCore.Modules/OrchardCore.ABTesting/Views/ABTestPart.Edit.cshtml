@@ -1,116 +1,33 @@
 @model ABTestPartViewModel
 
-
-<div class="mb-3">
-    <h5>@T["Traffic Split"]</h5>
-    <div class="row align-items-center">
-        <div class="col-md-8">
-            <label asp-for="PercentageA" class="form-label">@T["Variant A Percentage"]</label>
-            <input asp-for="PercentageA" type="range" class="form-range" min="0" max="100" id="percentageSlider" />
-            <span asp-validation-for="PercentageA" class="text-danger"></span>
-        </div>
-        <div class="col-md-4">
-            <div class="d-flex justify-content-around">
-                <div class="text-center">
-                    <strong>@T["Variant A"]</strong>
-                    <div class="fs-4 text-primary" id="percentageADisplay">@Model.PercentageA%</div>
-                </div>
-                <div class="text-center">
-                    <strong>@T["Variant B"]</strong>
-                    <div class="fs-4 text-secondary" id="percentageBDisplay">@Model.PercentageB%</div>
-                </div>
+<h5>@T["Traffic Split"]</h5>
+<div class="row align-items-center">
+    <div class="col-md-8">
+        <label asp-for="PercentageA" class="form-label">@T["Variant A Percentage"]</label>
+        <input asp-for="PercentageA" type="range" class="form-range" min="0" max="100" id="percentageSlider-@Html.IdFor(m => m)" />
+        <span asp-validation-for="PercentageA" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <div class="d-flex justify-content-around">
+            <div class="text-center">
+                <strong>@T["Variant A"]</strong>
+                <div class="fs-4 text-primary" id="percentageADisplay-@Html.IdFor(m => m)">@Model.PercentageA%</div>
             </div>
-        </div>
-    </div>
-    <div class="form-text">@T["Drag the slider to adjust the traffic split between variants."]</div>
-</div>
-
-<div class="mb-3">
-    <h5>@T["Goal Configuration"]</h5>
-    @if (Model.AreGoalsLocked)
-    {
-        <div class="alert alert-info mb-3">
-            <i class="fa-solid fa-lock me-2" aria-hidden="true"></i>
-            @T["Goal configuration is locked because this test has been published and has tracked impressions. Changing goal settings after data collection has started would invalidate existing conversion data."]
-        </div>
-    }
-    <div class="mb-3 w-50">
-        <label asp-for="GoalType" class="form-label">@T["Goal Type"]</label>
-        <select asp-for="GoalType" class="form-select" id="goalTypeSelect" disabled="@Model.AreGoalsLocked">
-            <option value="0">@T["No Goal (Track impressions only)"]</option>
-            <option value="1">@T["Button/Link Click"]</option>
-            <option value="2">@T["Form Submission"]</option>
-            <option value="3">@T["Scroll Percentage"]</option>
-            <option value="4">@T["Custom Event"]</option>
-        </select>
-        <span asp-validation-for="GoalType" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3 w-50" id="goalSelectorRow" style="display: none;">
-        <label asp-for="GoalSelector" class="form-label">@T["CSS Selector"]</label>
-        <input asp-for="GoalSelector" class="form-control" placeholder="@T["e.g., #signup-btn or .cta-button"]" disabled="@Model.AreGoalsLocked" />
-        <span asp-validation-for="GoalSelector" class="text-danger"></span>
-        <div class="form-text">@T["The CSS selector to identify the element(s) to track."]</div>
-    </div>
-
-    <div class="mb-3 w-50" id="goalScrollRow" style="display: none;">
-        <label asp-for="GoalScrollPercentage" class="form-label">@T["Scroll Percentage"]</label>
-        <div class="input-group">
-            <input asp-for="GoalScrollPercentage" type="number" min="0" max="100" class="form-control" disabled="@Model.AreGoalsLocked" />
-            <span class="input-group-text">%</span>
-        </div>
-        <span asp-validation-for="GoalScrollPercentage" class="text-danger"></span>
-        <div class="form-text">@T["Track when user scrolls past this percentage of the page."]</div>
-    </div>
-
-    <div class="mb-3 w-50" id="goalEventRow" style="display: none;">
-        <label asp-for="GoalEventName" class="form-label">@T["Event Name"]</label>
-        <input asp-for="GoalEventName" class="form-control" placeholder="@T["e.g., purchase-completed"]" disabled="@Model.AreGoalsLocked" />
-        <span asp-validation-for="GoalEventName" class="text-danger"></span>
-        <div class="form-text">@T["The custom JavaScript event name to listen for. Trigger with: window.dispatchEvent(new Event('event-name'))"]</div>
-    </div>
-
-    @if (Model.AreGoalsLocked)
-    {
-        <input type="hidden" asp-for="GoalType" />
-        <input type="hidden" asp-for="GoalSelector" />
-        <input type="hidden" asp-for="GoalScrollPercentage" />
-        <input type="hidden" asp-for="GoalEventName" />
-    }
-</div>
-
-<div class="mb-3">
-    <h5>@T["Statistical Settings"]</h5>
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label asp-for="MinimumSampleSize" class="form-label">@T["Minimum Sample Size"]</label>
-                <input asp-for="MinimumSampleSize" type="number" min="30" max="500" class="form-control" style="max-width: 200px;" />
-                <span asp-validation-for="MinimumSampleSize" class="text-danger"></span>
-                <div class="form-text">@T["Minimum impressions per variant required before statistical analysis. Lower values give faster results but less reliable statistics. (Range: 30-500, Default: 50)"]</div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label asp-for="ConfidenceThreshold" class="form-label">@T["Confidence Threshold"]</label>
-                <select asp-for="ConfidenceThreshold" class="form-select" style="max-width: 200px;">
-                    <option value="90">@T["90% (Faster results)"]</option>
-                    <option value="95">@T["95% (Standard)"]</option>
-                    <option value="99">@T["99% (Most reliable)"]</option>
-                </select>
-                <span asp-validation-for="ConfidenceThreshold" class="text-danger"></span>
-                <div class="form-text">@T["The confidence level required to declare a winning variant. Higher values require more evidence before declaring a winner."]</div>
+            <div class="text-center">
+                <strong>@T["Variant B"]</strong>
+                <div class="fs-4 text-secondary" id="percentageBDisplay-@Html.IdFor(m => m)">@Model.PercentageB%</div>
             </div>
         </div>
     </div>
 </div>
+<div class="form-text">@T["Drag the slider to adjust the traffic split between variants."]</div>
 
 <script at="Foot">
     (function() {
-        // Traffic split slider
-        var slider = document.getElementById('percentageSlider');
-        var displayA = document.getElementById('percentageADisplay');
-        var displayB = document.getElementById('percentageBDisplay');
+        var prefix = '@Html.IdFor(m => m)';
+        var slider = document.getElementById('percentageSlider-' + prefix);
+        var displayA = document.getElementById('percentageADisplay-' + prefix);
+        var displayB = document.getElementById('percentageBDisplay-' + prefix);
 
         slider.addEventListener('input', function() {
             var valueA = parseInt(this.value);
@@ -118,24 +35,5 @@
             displayA.textContent = valueA + '%';
             displayB.textContent = valueB + '%';
         });
-
-        // Goal type field visibility
-        var goalTypeSelect = document.getElementById('goalTypeSelect');
-        var selectorRow = document.getElementById('goalSelectorRow');
-        var scrollRow = document.getElementById('goalScrollRow');
-        var eventRow = document.getElementById('goalEventRow');
-
-        function updateGoalFields() {
-            var value = parseInt(goalTypeSelect.value);
-            // 1 = ButtonLinkClick, 2 = FormSubmission
-            selectorRow.style.display = (value === 1 || value === 2) ? 'block' : 'none';
-            // 3 = ScrollPercentage
-            scrollRow.style.display = (value === 3) ? 'block' : 'none';
-            // 4 = CustomEvent
-            eventRow.style.display = (value === 4) ? 'block' : 'none';
-        }
-
-        goalTypeSelect.addEventListener('change', updateGoalFields);
-        updateGoalFields(); // Initialize on page load
     })();
 </script>

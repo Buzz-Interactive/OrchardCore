@@ -37,4 +37,24 @@ public class ABTestStatisticsResult
     /// A human-readable summary of the statistical analysis.
     /// </summary>
     public string SummaryText { get; set; }
+
+    /// <summary>
+    /// The Bayesian probability (0-100) that Variant A has the higher true conversion rate.
+    /// Calculated using Monte Carlo simulation with Beta distributions.
+    /// </summary>
+    public double ProbabilityToBeBestA { get; set; }
+
+    /// <summary>
+    /// The Bayesian probability (0-100) that Variant B has the higher true conversion rate.
+    /// Calculated using Monte Carlo simulation with Beta distributions.
+    /// </summary>
+    public double ProbabilityToBeBestB { get; set; }
+
+    /// <summary>
+    /// The percentage uplift of Variant B relative to Variant A (the control).
+    /// Calculated as (RateB - RateA) / RateA * 100.
+    /// Positive values indicate B is performing better, negative values indicate worse.
+    /// Null when Variant A has zero conversions (uplift cannot be calculated).
+    /// </summary>
+    public double? UpliftB { get; set; }
 }
