@@ -3,11 +3,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using OrchardCore.ABTesting.Models;
 using OrchardCore.ABTesting.Services;
+using OrchardCore.ABTesting.Settings;
 using OrchardCore.ABTesting.ViewModels;
 using OrchardCore.Admin;
+using OrchardCore.ContentFields.ViewModels;
 using OrchardCore.ContentManagement;
+using OrchardCore.ContentManagement.Metadata;
+using OrchardCore.ContentManagement.Metadata.Models;
+using OrchardCore.ContentManagement.Records;
+using OrchardCore.Contents;
 using OrchardCore.DisplayManagement;
 using OrchardCore.DisplayManagement.Notify;
+using OrchardCore.Settings;
+using YesSql;
+using YesSql.Services;
 
 namespace OrchardCore.ABTesting.Controllers;
 
@@ -22,6 +31,9 @@ public class AdminController : Controller
     private readonly IAuthorizationService _authorizationService;
     private readonly IShapeFactory _shapeFactory;
     private readonly INotifier _notifier;
+    private readonly ISiteService _siteService;
+    private readonly ISession _session;
+    private readonly IContentDefinitionManager _contentDefinitionManager;
     private readonly IHtmlLocalizer H;
 
     public AdminController(
@@ -33,6 +45,9 @@ public class AdminController : Controller
         IAuthorizationService authorizationService,
         IShapeFactory shapeFactory,
         INotifier notifier,
+        ISiteService siteService,
+        ISession session,
+        IContentDefinitionManager contentDefinitionManager,
         IHtmlLocalizer<AdminController> htmlLocalizer)
     {
         _abTestManager = abTestManager;
@@ -43,6 +58,9 @@ public class AdminController : Controller
         _authorizationService = authorizationService;
         _shapeFactory = shapeFactory;
         _notifier = notifier;
+        _siteService = siteService;
+        _session = session;
+        _contentDefinitionManager = contentDefinitionManager;
         H = htmlLocalizer;
     }
 
@@ -173,6 +191,8 @@ public class AdminController : Controller
             VariantBContentItemId = test.VariantBContentItemId,
             VariantADisplayText = await GetContentDisplayTextAsync(test.VariantAContentItemId),
             VariantBDisplayText = await GetContentDisplayTextAsync(test.VariantBContentItemId),
+            SelectedVariantA = await GetSelectedItemAsync(test.VariantAContentItemId),
+            SelectedVariantB = await GetSelectedItemAsync(test.VariantBContentItemId),
             PercentageA = test.PercentageA,
             GoalType = test.GoalType,
             GoalSelector = test.GoalSelector,
@@ -192,14 +212,15 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(ABTestViewModel viewModel)
+    public async Task<IActionResult> Edit(string testId, ABTestViewModel viewModel)
     {
         if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
         {
             return Forbid();
         }
 
-        var test = await _abTestManager.GetAsync(viewModel.TestId);
+        viewModel.TestId = testId;
+        var test = await _abTestManager.GetAsync(testId);
         if (test == null)
         {
             return NotFound();
@@ -411,6 +432,63 @@ public class AdminController : Controller
         return View(shape);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> SearchContentItems(string query)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        // Get the A/B Testing settings
+        var settings = await _siteService.GetSettingsAsync<ABTestingSettings>();
+
+        // Determine which content types to search
+        IEnumerable<string> contentTypes;
+        if (settings.DisplayAllContentTypes)
+        {
+            // Get all content types without a stereotype (regular content types)
+            contentTypes = (await _contentDefinitionManager.ListTypeDefinitionsAsync())
+                .Where(x => !x.HasStereotype())
+                .Select(x => x.Name);
+        }
+        else
+        {
+            contentTypes = settings.AllowedContentTypes ?? [];
+        }
+
+        if (!contentTypes.Any())
+        {
+            return new ObjectResult(new List<VueMultiselectItemViewModel>());
+        }
+
+        // Query the content index
+        var contentQuery = _session.Query<ContentItem, ContentItemIndex>()
+            .With<ContentItemIndex>(x => x.ContentType.IsIn(contentTypes) && x.Latest);
+
+        if (!string.IsNullOrEmpty(query))
+        {
+            contentQuery.With<ContentItemIndex>(x => x.DisplayText.Contains(query) || x.ContentType.Contains(query));
+        }
+
+        var contentItems = await contentQuery.Take(50).ListAsync();
+
+        // Build the result list
+        var results = new List<VueMultiselectItemViewModel>();
+        foreach (var contentItem in contentItems)
+        {
+            results.Add(new VueMultiselectItemViewModel
+            {
+                Id = contentItem.ContentItemId,
+                DisplayText = contentItem.DisplayText ?? contentItem.ContentItemId,
+                HasPublished = contentItem.IsPublished(),
+                IsViewable = await _authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, contentItem),
+            });
+        }
+
+        return new ObjectResult(results.OrderBy(x => x.DisplayText));
+    }
+
     private async Task<string> GetContentDisplayTextAsync(string contentItemId)
     {
         if (string.IsNullOrEmpty(contentItemId))
@@ -422,10 +500,34 @@ public class AdminController : Controller
         return contentItem?.DisplayText ?? "(Not found)";
     }
 
+    private async Task<VueMultiselectItemViewModel> GetSelectedItemAsync(string contentItemId)
+    {
+        if (string.IsNullOrEmpty(contentItemId))
+        {
+            return null;
+        }
+
+        var contentItem = await _contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+        if (contentItem == null)
+        {
+            return null;
+        }
+
+        return new VueMultiselectItemViewModel
+        {
+            Id = contentItem.ContentItemId,
+            DisplayText = contentItem.DisplayText ?? contentItem.ContentItemId,
+            HasPublished = contentItem.IsPublished(),
+            IsViewable = await _authorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, contentItem),
+        };
+    }
+
     private async Task PopulateViewModelDisplayData(ABTestViewModel viewModel)
     {
         viewModel.VariantADisplayText = await GetContentDisplayTextAsync(viewModel.VariantAContentItemId);
         viewModel.VariantBDisplayText = await GetContentDisplayTextAsync(viewModel.VariantBContentItemId);
+        viewModel.SelectedVariantA = await GetSelectedItemAsync(viewModel.VariantAContentItemId);
+        viewModel.SelectedVariantB = await GetSelectedItemAsync(viewModel.VariantBContentItemId);
 
         var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(viewModel.TestId);
         var (conversionsA, conversionsB) = await _goalService.GetConversionsAsync(viewModel.TestId);

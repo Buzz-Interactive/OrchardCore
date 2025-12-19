@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using OrchardCore.ABTesting.Drivers;
 using OrchardCore.ABTesting.Filters;
 using OrchardCore.ABTesting.Indexes;
 using OrchardCore.ABTesting.Middleware;
@@ -9,9 +10,11 @@ using OrchardCore.ABTesting.Models;
 using OrchardCore.ABTesting.Services;
 using OrchardCore.Data;
 using OrchardCore.Data.Migration;
+using OrchardCore.DisplayManagement.Handlers;
 using OrchardCore.Modules;
 using OrchardCore.Navigation;
 using OrchardCore.Security.Permissions;
+using OrchardCore.Settings;
 
 namespace OrchardCore.ABTesting;
 
@@ -46,6 +49,9 @@ public sealed class Startup : StartupBase
 
         // Register admin menu
         services.AddNavigationProvider<AdminMenu>();
+
+        // Register site settings display driver
+        services.AddSiteDisplayDriver<ABTestingSiteSettingsDisplayDriver>();
     }
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)

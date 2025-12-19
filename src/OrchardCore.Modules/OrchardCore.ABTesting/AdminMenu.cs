@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Localization;
+using OrchardCore.ABTesting.Drivers;
 using OrchardCore.Navigation;
 
 namespace OrchardCore.ABTesting;
@@ -9,6 +10,12 @@ public sealed class AdminMenu : AdminNavigationProvider
     private static readonly RouteValueDictionary _routeValues = new()
     {
         { "Area", "OrchardCore.ABTesting" },
+    };
+
+    private static readonly RouteValueDictionary _settingsRouteValues = new()
+    {
+        { "area", "OrchardCore.Settings" },
+        { "groupId", ABTestingSiteSettingsDisplayDriver.GroupId },
     };
 
     internal readonly IStringLocalizer S;
@@ -27,6 +34,13 @@ public sealed class AdminMenu : AdminNavigationProvider
                 .Permission(Permissions.ManageABTests)
                 .Action("Index", "Admin", _routeValues)
                 .LocalNav()
+            )
+            .Add(S["Settings"], settings => settings
+                .Add(S["A/B Testing"], S["A/B Testing"].PrefixPosition(), abTestingSettings => abTestingSettings
+                    .Action("Index", "Admin", _settingsRouteValues)
+                    .Permission(Permissions.ManageABTests)
+                    .LocalNav()
+                )
             );
 
         return ValueTask.CompletedTask;

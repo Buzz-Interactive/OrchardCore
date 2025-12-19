@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using OrchardCore.ABTesting.Models;
+using OrchardCore.ContentFields.ViewModels;
 
 namespace OrchardCore.ABTesting.ViewModels;
 
@@ -45,6 +46,18 @@ public class ABTestViewModel
     /// </summary>
     [BindNever]
     public string VariantBDisplayText { get; set; }
+
+    /// <summary>
+    /// Selected item data for Variant A content picker (used by vue-multiselect).
+    /// </summary>
+    [BindNever]
+    public VueMultiselectItemViewModel SelectedVariantA { get; set; }
+
+    /// <summary>
+    /// Selected item data for Variant B content picker (used by vue-multiselect).
+    /// </summary>
+    [BindNever]
+    public VueMultiselectItemViewModel SelectedVariantB { get; set; }
 
     /// <summary>
     /// The percentage of traffic for Variant A (0-100).

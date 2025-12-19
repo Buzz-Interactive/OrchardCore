@@ -1,0 +1,36 @@
+@model OrchardCore.ABTesting.ViewModels.ABTestingSettingsViewModel
+
+<div class="mb-3">
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" asp-for="DisplayAllContentTypes" id="DisplayAllContentTypes">
+        <label class="form-check-label" asp-for="DisplayAllContentTypes">@T["Allow all content types"]</label>
+    </div>
+    <span class="hint">@T["When checked, any content type can be used in A/B tests. When unchecked, only selected content types below can be used."]</span>
+</div>
+
+<div class="mb-3" id="ContentTypesContainer">
+    <label class="form-label">@T["Allowed Content Types"]</label>
+    <span class="hint d-block mb-2">@T["Select which content types can be used as variants in A/B tests."]</span>
+    @await Component.InvokeAsync("SelectContentTypes", new {
+        selectedContentTypes = Model.AllowedContentTypes,
+        htmlName = Html.NameFor(m => m.AllowedContentTypes)
+    })
+</div>
+
+<script at="Foot">
+    document.addEventListener('DOMContentLoaded', function() {
+        var displayAllCheckbox = document.getElementById('DisplayAllContentTypes');
+        var contentTypesContainer = document.getElementById('ContentTypesContainer');
+
+        function updateVisibility() {
+            if (displayAllCheckbox.checked) {
+                contentTypesContainer.classList.add('d-none');
+            } else {
+                contentTypesContainer.classList.remove('d-none');
+            }
+        }
+
+        displayAllCheckbox.addEventListener('change', updateVisibility);
+        updateVisibility();
+    });
+</script>

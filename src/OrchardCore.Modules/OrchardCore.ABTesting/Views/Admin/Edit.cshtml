@@ -1,40 +1,22 @@
 @model ABTestViewModel
+@using System.Text.Json
+@using OrchardCore.ContentFields.ViewModels
+@{
+    var searchUrl = Url.RouteUrl("ABTesting.SearchContentItems");
+    var editUrl = Url.RouteUrl(new { area = "OrchardCore.Contents", controller = "Admin", action = "Edit", contentItemId = "contentItemId", returnUrl = FullRequestPath });
+    var viewUrl = Url.RouteUrl(new { area = "OrchardCore.Contents", controller = "Admin", action = "Display", contentItemId = "contentItemId" });
+    var variantAElementId = $"ContentPicker_VariantA_{Guid.NewGuid():N}";
+    var variantBElementId = $"ContentPicker_VariantB_{Guid.NewGuid():N}";
+    var selectedVariantA = Model.SelectedVariantA != null ? JConvert.SerializeObject(new[] { Model.SelectedVariantA }, JOptions.CamelCase) : "[]";
+    var selectedVariantB = Model.SelectedVariantB != null ? JConvert.SerializeObject(new[] { Model.SelectedVariantB }, JOptions.CamelCase) : "[]";
+}
 
-<zone Name="Title"><h1>@RenderTitleSegments(T["Edit A/B Test: {0}", Model.Name])</h1></zone>
+<script asp-name="vue-multiselect-wrapper" at="Foot"></script>
+<style asp-name="vue-multiselect" version="2" at="Foot"></style>
+
+<zone Name="Title"><h1>@RenderTitleSegments(T["Edit A/B Test"])</h1></zone>
 
 <div asp-validation-summary="ModelOnly"></div>
-
-<div class="row mb-4">
-    <div class="col">
-        <div class="d-flex align-items-center gap-2">
-            @if (Model.IsActive)
-            {
-                <span class="badge text-bg-success fs-6">@T["Active"]</span>
-            }
-            else
-            {
-                <span class="badge text-bg-secondary fs-6">@T["Inactive"]</span>
-            }
-            <span class="text-muted">
-                <i class="fa-solid fa-eye me-1" aria-hidden="true"></i>@T["{0} impressions", Model.TotalImpressions]
-            </span>
-            <span class="text-muted">
-                <i class="fa-solid fa-bullseye me-1" aria-hidden="true"></i>@T["{0} conversions", Model.TotalConversions]
-            </span>
-            @if (Model.CreatedUtc.HasValue)
-            {
-                <span class="text-muted">
-                    <i class="fa-solid fa-calendar me-1" aria-hidden="true"></i>@T["Created {0}", Model.CreatedUtc.Value.ToString("g")]
-                </span>
-            }
-        </div>
-    </div>
-    <div class="col-auto">
-        <a asp-action="Results" asp-route-testId="@Model.TestId" class="btn btn-info">
-            <i class="fa-solid fa-chart-bar me-1" aria-hidden="true"></i>@T["View Results"]
-        </a>
-    </div>
-</div>
 
 <form asp-action="Edit" asp-route-testId="@Model.TestId" method="post" class="no-multisubmit">
     <div class="mb-3" asp-validation-class-for="Name">
@@ -48,24 +30,88 @@
     <div class="row">
         <div class="col-md-6">
             <div class="mb-3" asp-validation-class-for="VariantAContentItemId">
-                <label asp-for="VariantAContentItemId" class="form-label">@T["Variant A Content"]</label>
-                <input asp-for="VariantAContentItemId" class="form-control" placeholder="@T["Enter Content Item ID"]" />
+                <label asp-for="VariantAContentItemId" class="form-label">@T["Variant A (Control)"]</label>
+                <div id="@variantAElementId" class="vue-multiselect" data-editor-type="ContentPicker" data-selected-items="@selectedVariantA" data-edit-url="@editUrl" data-view-url="@viewUrl" data-search-url="@searchUrl" data-multiple="false">
+                    <ul class="mb-1 list-group content-picker-default__list" v-show="arrayOfItems.length" v-cloak>
+                        <li v-for="(item, i) in arrayOfItems"
+                            class="list-group-item content-picker-default__list-item d-flex align-items-start justify-content-between"
+                            :key="item.id">
+                            <div class="align-items-center align-self-center">
+                                <a v-if="item.isClickable" :href="url(item)" target="_blank">
+                                    <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
+                                </a>
+                                <span v-else>
+                                    <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
+                                </span>
+                            </div>
+                            <div class="btn-group btn-group-sm align-items-center" role="group">
+                                <button v-on:click="remove(item)" type="button" class="btn btn-secondary content-picker-default__list-item__delete"><i class="fa-solid fa-trash fa-sm" aria-hidden="true"></i></button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div>
+                        <input asp-for="VariantAContentItemId" type="hidden" v-model="selectedIds" />
+                        <vue-multiselect v-model="value" :options="options" track-by="id"
+                                         label="displayText" placeholder="@T["Type to search for content..."]"
+                                         @@search-change="asyncFind" @@select="onSelect"
+                                         :searchable="true" :close-on-select="true" :reset-after="true"
+                                         :show-labels="true" :hide-selected="false"
+                                         :disabled="isDisabled"
+                                         select-label="@T["Select"]" deselect-label="@T["Remove"]">
+                            <template slot="option" slot-scope="props">
+                                <div v-cloak><span>{{ props.option.displayText }}</span><span class="small ms-2" v-show="!props.option.hasPublished">(@T["Not published"])</span></div>
+                            </template>
+                            <template slot="noResult">
+                                @T["No result found"]
+                            </template>
+                        </vue-multiselect>
+                    </div>
+                </div>
                 <span asp-validation-for="VariantAContentItemId" class="text-danger"></span>
-                @if (!string.IsNullOrEmpty(Model.VariantADisplayText))
-                {
-                    <div class="form-text">@T["Current: {0}", Model.VariantADisplayText]</div>
-                }
+                <div class="form-text">@T["Select the content item for the control variant."]</div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3" asp-validation-class-for="VariantBContentItemId">
-                <label asp-for="VariantBContentItemId" class="form-label">@T["Variant B Content"]</label>
-                <input asp-for="VariantBContentItemId" class="form-control" placeholder="@T["Enter Content Item ID"]" />
+                <label asp-for="VariantBContentItemId" class="form-label">@T["Variant B (Challenger)"]</label>
+                <div id="@variantBElementId" class="vue-multiselect" data-editor-type="ContentPicker" data-selected-items="@selectedVariantB" data-edit-url="@editUrl" data-view-url="@viewUrl" data-search-url="@searchUrl" data-multiple="false">
+                    <ul class="mb-1 list-group content-picker-default__list" v-show="arrayOfItems.length" v-cloak>
+                        <li v-for="(item, i) in arrayOfItems"
+                            class="list-group-item content-picker-default__list-item d-flex align-items-start justify-content-between"
+                            :key="item.id">
+                            <div class="align-items-center align-self-center">
+                                <a v-if="item.isClickable" :href="url(item)" target="_blank">
+                                    <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
+                                </a>
+                                <span v-else>
+                                    <span>{{ item.displayText }}</span> <span v-show="!item.hasPublished" class="text-muted small">(@T["Not published"])</span>
+                                </span>
+                            </div>
+                            <div class="btn-group btn-group-sm align-items-center" role="group">
+                                <button v-on:click="remove(item)" type="button" class="btn btn-secondary content-picker-default__list-item__delete"><i class="fa-solid fa-trash fa-sm" aria-hidden="true"></i></button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div>
+                        <input asp-for="VariantBContentItemId" type="hidden" v-model="selectedIds" />
+                        <vue-multiselect v-model="value" :options="options" track-by="id"
+                                         label="displayText" placeholder="@T["Type to search for content..."]"
+                                         @@search-change="asyncFind" @@select="onSelect"
+                                         :searchable="true" :close-on-select="true" :reset-after="true"
+                                         :show-labels="true" :hide-selected="false"
+                                         :disabled="isDisabled"
+                                         select-label="@T["Select"]" deselect-label="@T["Remove"]">
+                            <template slot="option" slot-scope="props">
+                                <div v-cloak><span>{{ props.option.displayText }}</span><span class="small ms-2" v-show="!props.option.hasPublished">(@T["Not published"])</span></div>
+                            </template>
+                            <template slot="noResult">
+                                @T["No result found"]
+                            </template>
+                        </vue-multiselect>
+                    </div>
+                </div>
                 <span asp-validation-for="VariantBContentItemId" class="text-danger"></span>
-                @if (!string.IsNullOrEmpty(Model.VariantBDisplayText))
-                {
-                    <div class="form-text">@T["Current: {0}", Model.VariantBDisplayText]</div>
-                }
+                <div class="form-text">@T["Select the content item for the test variant."]</div>
             </div>
         </div>
     </div>
@@ -203,4 +249,8 @@
         goalTypeSelect.addEventListener('change', updateGoalFields);
         updateGoalFields();
     })();
+</script>
+<script at="Foot" depends-on="vue-multiselect-wrapper">
+    initVueMultiselect(document.querySelector("#@variantAElementId"));
+    initVueMultiselect(document.querySelector("#@variantBElementId"));
 </script>
