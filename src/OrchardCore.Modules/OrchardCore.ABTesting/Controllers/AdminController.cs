@@ -216,7 +216,7 @@ public class AdminController : Controller
             IsActive = test.IsActive,
             TotalImpressions = totalImpressions,
             TotalConversions = conversionsA + conversionsB,
-            AreGoalsLocked = test.IsActive && totalImpressions > 0,
+            AreGoalsLocked = totalImpressions > 0,
             CreatedUtc = test.CreatedUtc,
         };
 
@@ -256,7 +256,7 @@ public class AdminController : Controller
         // Check if goals are locked
         var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(viewModel.TestId);
         var totalImpressions = impressionsA + impressionsB;
-        var areGoalsLocked = test.IsActive && totalImpressions > 0;
+        var areGoalsLocked = totalImpressions > 0;
 
         // Validate goal configuration only if not locked
         if (!areGoalsLocked && !ValidateGoalConfiguration(viewModel))
@@ -566,7 +566,7 @@ public class AdminController : Controller
         if (test != null)
         {
             viewModel.IsActive = test.IsActive;
-            viewModel.AreGoalsLocked = test.IsActive && viewModel.TotalImpressions > 0;
+            viewModel.AreGoalsLocked = viewModel.TotalImpressions > 0;
             viewModel.CreatedUtc = test.CreatedUtc;
         }
     }
