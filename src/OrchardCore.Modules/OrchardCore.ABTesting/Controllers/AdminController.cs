@@ -144,6 +144,19 @@ public class AdminController : Controller
             return View(viewModel);
         }
 
+        // Validate variants are not in active tests
+        var conflictingTests = await _abTestManager.GetActiveTestsWithConflictingVariantsAsync(
+            viewModel.VariantAContentItemId,
+            viewModel.VariantBContentItemId);
+
+        if (conflictingTests.Any())
+        {
+            var conflictingNames = string.Join(", ", conflictingTests.Select(t => t.Name ?? t.TestId));
+            ModelState.AddModelError(string.Empty,
+                $"One or both variants are already used in active test(s): {conflictingNames}");
+            return View(viewModel);
+        }
+
         var test = new ABTest
         {
             Name = viewModel.Name,
@@ -248,6 +261,21 @@ public class AdminController : Controller
         // Validate goal configuration only if not locked
         if (!areGoalsLocked && !ValidateGoalConfiguration(viewModel))
         {
+            await PopulateViewModelDisplayData(viewModel);
+            return View(viewModel);
+        }
+
+        // Validate variants are not in other active tests (exclude current test)
+        var conflictingTests = await _abTestManager.GetActiveTestsWithConflictingVariantsAsync(
+            viewModel.VariantAContentItemId,
+            viewModel.VariantBContentItemId,
+            testId);
+
+        if (conflictingTests.Any())
+        {
+            var conflictingNames = string.Join(", ", conflictingTests.Select(t => t.Name ?? t.TestId));
+            ModelState.AddModelError(string.Empty,
+                $"One or both variants are already used in active test(s): {conflictingNames}");
             await PopulateViewModelDisplayData(viewModel);
             return View(viewModel);
         }

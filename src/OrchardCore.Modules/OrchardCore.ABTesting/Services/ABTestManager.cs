@@ -66,6 +66,22 @@ public class ABTestManager : IABTestManager
     }
 
     /// <inheritdoc />
+    public async Task<IEnumerable<ABTest>> GetActiveTestsWithConflictingVariantsAsync(
+        string variantAContentItemId,
+        string variantBContentItemId,
+        string excludeTestId = null)
+    {
+        var activeTests = await GetActiveAsync();
+
+        return activeTests.Where(t =>
+            (excludeTestId == null || t.TestId != excludeTestId) &&
+            (t.VariantAContentItemId == variantAContentItemId ||
+             t.VariantBContentItemId == variantAContentItemId ||
+             t.VariantAContentItemId == variantBContentItemId ||
+             t.VariantBContentItemId == variantBContentItemId));
+    }
+
+    /// <inheritdoc />
     public async Task<ABTest> CreateAsync(ABTest test)
     {
         ArgumentNullException.ThrowIfNull(test);
@@ -135,6 +151,19 @@ public class ABTestManager : IABTestManager
             string.IsNullOrEmpty(test.VariantBContentItemId))
         {
             throw new InvalidOperationException("Both variants must be selected before activating a test.");
+        }
+
+        // Validate variants are not used in other active tests
+        var conflictingTests = await GetActiveTestsWithConflictingVariantsAsync(
+            test.VariantAContentItemId,
+            test.VariantBContentItemId,
+            test.TestId);
+
+        if (conflictingTests.Any())
+        {
+            var conflictingNames = string.Join(", ", conflictingTests.Select(t => t.Name ?? t.TestId));
+            throw new InvalidOperationException(
+                $"Cannot activate test: one or both variants are already used in active test(s): {conflictingNames}");
         }
 
         test.IsActive = true;

@@ -34,6 +34,18 @@ public interface IABTestManager
     Task<IEnumerable<ABTest>> GetActiveAsync();
 
     /// <summary>
+    /// Gets active ABTest entities that have conflicting variants with the specified content item IDs.
+    /// </summary>
+    /// <param name="variantAContentItemId">The content item ID for variant A.</param>
+    /// <param name="variantBContentItemId">The content item ID for variant B.</param>
+    /// <param name="excludeTestId">Optional test ID to exclude from the search (useful when editing an existing test).</param>
+    /// <returns>Active ABTest entities that contain either variant.</returns>
+    Task<IEnumerable<ABTest>> GetActiveTestsWithConflictingVariantsAsync(
+        string variantAContentItemId,
+        string variantBContentItemId,
+        string excludeTestId = null);
+
+    /// <summary>
     /// Creates a new ABTest entity.
     /// </summary>
     /// <param name="test">The test to create.</param>
