@@ -1,0 +1,22 @@
+@{
+    int minimumSampleSize = Model.MinimumSampleSize;
+    int confidenceThreshold = Model.ConfidenceThreshold;
+}
+
+<div class="mb-3">
+    <label for="MinimumSampleSize" class="form-label">@T["Minimum Sample Size"]</label>
+    <input type="number" min="30" max="500" class="form-control" style="max-width: 200px;" id="MinimumSampleSize" name="MinimumSampleSize" value="@minimumSampleSize" />
+    <span class="text-danger field-validation-valid" data-valmsg-for="MinimumSampleSize" data-valmsg-replace="true"></span>
+    <div class="form-text">@T["Minimum impressions per variant required before statistical analysis. Lower values give faster results but less reliable statistics. (Range: 30-500, Default: 50)"]</div>
+</div>
+
+<div class="mb-3">
+    <label for="ConfidenceThreshold" class="form-label">@T["Confidence Threshold"]</label>
+    <select class="form-select" style="max-width: 200px;" id="ConfidenceThreshold" name="ConfidenceThreshold">
+        <option value="90" selected="@(confidenceThreshold == 90)">@T["90% (Faster results)"]</option>
+        <option value="95" selected="@(confidenceThreshold == 95)">@T["95% (Standard)"]</option>
+        <option value="99" selected="@(confidenceThreshold == 99)">@T["99% (Most reliable)"]</option>
+    </select>
+    <span class="text-danger field-validation-valid" data-valmsg-for="ConfidenceThreshold" data-valmsg-replace="true"></span>
+    <div class="form-text">@T["The confidence level required to declare a winning variant. Higher values require more evidence before declaring a winner."]</div>
+</div>

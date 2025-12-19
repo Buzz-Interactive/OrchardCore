@@ -1,0 +1,40 @@
+@{
+    int percentageA = Model.PercentageA;
+    int percentageB = 100 - percentageA;
+}
+
+<div class="row align-items-center">
+    <div class="col-md-8">
+        <label for="PercentageA" class="form-label">@T["Traffic Split"]</label>
+        <input type="range" class="form-range" min="0" max="100" id="percentageSlider" name="PercentageA" value="@percentageA" />
+        <span class="text-danger field-validation-valid" data-valmsg-for="PercentageA" data-valmsg-replace="true"></span>
+    </div>
+    <div class="col-md-4">
+        <div class="d-flex justify-content-around">
+            <div class="text-center">
+                <strong>@T["Variant A"]</strong>
+                <div class="fs-4 text-primary" id="percentageADisplay">@percentageA%</div>
+            </div>
+            <div class="text-center">
+                <strong>@T["Variant B"]</strong>
+                <div class="fs-4 text-secondary" id="percentageBDisplay">@percentageB%</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-text mb-3">@T["Drag the slider to adjust the traffic split between variants."]</div>
+
+<script at="Foot">
+    (function() {
+        var slider = document.getElementById('percentageSlider');
+        var displayA = document.getElementById('percentageADisplay');
+        var displayB = document.getElementById('percentageBDisplay');
+
+        slider.addEventListener('input', function() {
+            var valueA = parseInt(this.value);
+            var valueB = 100 - valueA;
+            displayA.textContent = valueA + '%';
+            displayB.textContent = valueB + '%';
+        });
+    })();
+</script>

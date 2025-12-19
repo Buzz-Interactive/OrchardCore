@@ -1,0 +1,82 @@
+@using OrchardCore.ABTesting.Models
+@{
+    GoalType goalType = Model.GoalType;
+    string goalSelector = Model.GoalSelector;
+    int goalScrollPercentage = Model.GoalScrollPercentage;
+    string goalEventName = Model.GoalEventName;
+    bool areGoalsLocked = Model.AreGoalsLocked;
+}
+
+@if (areGoalsLocked)
+{
+    <div class="alert alert-info mb-3">
+        <i class="fa-solid fa-lock me-2" aria-hidden="true"></i>
+        @T["Goal configuration is locked because this test has tracked impressions. Changing goal settings after data collection has started would invalidate existing conversion data."]
+    </div>
+}
+
+<div class="mb-3 w-50">
+    <label for="GoalType" class="form-label">@T["Goal Type"]</label>
+    <select class="form-select" id="goalTypeSelect" name="GoalType" disabled="@areGoalsLocked">
+        <option value="0" selected="@(goalType == GoalType.None)">@T["No Goal (Track impressions only)"]</option>
+        <option value="1" selected="@(goalType == GoalType.ButtonLinkClick)">@T["Button/Link Click"]</option>
+        <option value="2" selected="@(goalType == GoalType.FormSubmission)">@T["Form Submission"]</option>
+        <option value="3" selected="@(goalType == GoalType.ScrollPercentage)">@T["Scroll Percentage"]</option>
+        <option value="4" selected="@(goalType == GoalType.CustomEvent)">@T["Custom Event"]</option>
+    </select>
+    <span class="text-danger field-validation-valid" data-valmsg-for="GoalType" data-valmsg-replace="true"></span>
+</div>
+
+<div class="mb-3 w-50" id="goalSelectorRow" style="display: none;">
+    <label for="GoalSelector" class="form-label">@T["CSS Selector"]</label>
+    <input type="text" class="form-control" id="GoalSelector" name="GoalSelector" value="@goalSelector" placeholder="@T["e.g., #signup-btn or .cta-button"]" disabled="@areGoalsLocked" />
+    <span class="text-danger field-validation-valid" data-valmsg-for="GoalSelector" data-valmsg-replace="true"></span>
+    <div class="form-text">@T["The CSS selector to identify the element(s) to track."]</div>
+</div>
+
+<div class="mb-3 w-50" id="goalScrollRow" style="display: none;">
+    <label for="GoalScrollPercentage" class="form-label">@T["Scroll Percentage"]</label>
+    <div class="input-group" style="max-width: 200px;">
+        <input type="number" min="0" max="100" class="form-control" id="GoalScrollPercentage" name="GoalScrollPercentage" value="@goalScrollPercentage" disabled="@areGoalsLocked" />
+        <span class="input-group-text">%</span>
+    </div>
+    <span class="text-danger field-validation-valid" data-valmsg-for="GoalScrollPercentage" data-valmsg-replace="true"></span>
+    <div class="form-text">@T["Track when user scrolls past this percentage of the page."]</div>
+</div>
+
+<div class="mb-3 w-50" id="goalEventRow" style="display: none;">
+    <label for="GoalEventName" class="form-label">@T["Event Name"]</label>
+    <input type="text" class="form-control" id="GoalEventName" name="GoalEventName" value="@goalEventName" placeholder="@T["e.g., purchase-completed"]" disabled="@areGoalsLocked" />
+    <span class="text-danger field-validation-valid" data-valmsg-for="GoalEventName" data-valmsg-replace="true"></span>
+    <div class="form-text">@T["The custom JavaScript event name to listen for. Trigger with: window.dispatchEvent(new Event('event-name'))"]</div>
+</div>
+
+@if (areGoalsLocked)
+{
+    <input type="hidden" name="GoalType" value="@((int)goalType)" />
+    <input type="hidden" name="GoalSelector" value="@goalSelector" />
+    <input type="hidden" name="GoalScrollPercentage" value="@goalScrollPercentage" />
+    <input type="hidden" name="GoalEventName" value="@goalEventName" />
+}
+
+<script at="Foot">
+    (function() {
+        var goalTypeSelect = document.getElementById('goalTypeSelect');
+        var selectorRow = document.getElementById('goalSelectorRow');
+        var scrollRow = document.getElementById('goalScrollRow');
+        var eventRow = document.getElementById('goalEventRow');
+
+        function updateGoalFields() {
+            var value = parseInt(goalTypeSelect.value);
+            // 1 = ButtonLinkClick, 2 = FormSubmission
+            selectorRow.style.display = (value === 1 || value === 2) ? 'block' : 'none';
+            // 3 = ScrollPercentage
+            scrollRow.style.display = (value === 3) ? 'block' : 'none';
+            // 4 = CustomEvent
+            eventRow.style.display = (value === 4) ? 'block' : 'none';
+        }
+
+        goalTypeSelect.addEventListener('change', updateGoalFields);
+        updateGoalFields();
+    })();
+</script>
