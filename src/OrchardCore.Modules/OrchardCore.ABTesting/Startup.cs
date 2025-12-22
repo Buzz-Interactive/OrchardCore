@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OrchardCore.ABTesting.Drivers;
 using OrchardCore.ABTesting.Filters;
+using OrchardCore.ABTesting.Handlers;
 using OrchardCore.ABTesting.Indexes;
 using OrchardCore.ABTesting.Middleware;
 using OrchardCore.ABTesting.Models;
 using OrchardCore.ABTesting.Services;
+using OrchardCore.ContentManagement.Handlers;
 using OrchardCore.Data;
 using OrchardCore.Data.Migration;
 using OrchardCore.DisplayManagement.Handlers;
@@ -30,6 +32,9 @@ public sealed class Startup : StartupBase
         services.AddScoped<IABTestContentResolver, ABTestContentResolver>();
         services.AddSingleton<IStatisticalAnalysisService, StatisticalAnalysisService>();
         services.AddScoped<IBotDetectionService, BotDetectionService>();
+
+        // Register content handler for variant deletion/unpublishing
+        services.AddScoped<IContentHandler, ABTestContentHandler>();
 
         // Register the tracking filter
         services.Configure<MvcOptions>(options =>

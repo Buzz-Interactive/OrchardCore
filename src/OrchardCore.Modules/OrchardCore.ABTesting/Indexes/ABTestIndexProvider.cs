@@ -19,5 +19,7 @@ public class ABTestIndexProvider : IndexProvider<ABTest>
                 VariantBContentItemId = abTest.VariantBContentItemId,
                 IsActive = abTest.IsActive,
                 CreatedUtc = abTest.CreatedUtc,
+                VariantAState = abTest.VariantAState,
+                VariantBState = abTest.VariantBState,
             });
 }

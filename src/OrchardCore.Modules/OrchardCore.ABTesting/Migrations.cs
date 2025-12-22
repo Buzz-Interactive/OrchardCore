@@ -70,4 +70,20 @@ public sealed class Migrations : DataMigration
 
         return 1;
     }
+
+    public async Task<int> UpdateFrom1Async()
+    {
+        // Add variant state columns to track deleted/unpublished variants
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .AddColumn<int>("VariantAState", col => col.WithDefault(0)),
+            collection: ABTest.Collection
+        );
+
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .AddColumn<int>("VariantBState", col => col.WithDefault(0)),
+            collection: ABTest.Collection
+        );
+
+        return 2;
+    }
 }

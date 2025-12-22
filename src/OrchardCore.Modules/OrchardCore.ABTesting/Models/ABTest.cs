@@ -39,6 +39,36 @@ public class ABTest : Entity
     public string VariantBContentItemId { get; set; }
 
     /// <summary>
+    /// Cached display name of Variant A (preserved when content item is deleted).
+    /// </summary>
+    public string VariantADisplayName { get; set; }
+
+    /// <summary>
+    /// Cached display name of Variant B (preserved when content item is deleted).
+    /// </summary>
+    public string VariantBDisplayName { get; set; }
+
+    /// <summary>
+    /// State of the Variant A content item.
+    /// </summary>
+    public VariantState VariantAState { get; set; } = VariantState.Available;
+
+    /// <summary>
+    /// State of the Variant B content item.
+    /// </summary>
+    public VariantState VariantBState { get; set; } = VariantState.Available;
+
+    /// <summary>
+    /// When Variant A became unavailable (unpublished or deleted).
+    /// </summary>
+    public DateTime? VariantAUnavailableSinceUtc { get; set; }
+
+    /// <summary>
+    /// When Variant B became unavailable (unpublished or deleted).
+    /// </summary>
+    public DateTime? VariantBUnavailableSinceUtc { get; set; }
+
+    /// <summary>
     /// The percentage of traffic that should be directed to Variant A.
     /// Variant B receives (100 - PercentageA)% of traffic.
     /// </summary>

@@ -1,5 +1,6 @@
 using OrchardCore.ABTesting.Indexes;
 using OrchardCore.ABTesting.Models;
+using OrchardCore.ContentManagement;
 using YesSql;
 using IIdGenerator = OrchardCore.Entities.IIdGenerator;
 
@@ -12,13 +13,16 @@ public class ABTestManager : IABTestManager
 {
     private readonly ISession _session;
     private readonly IIdGenerator _idGenerator;
+    private readonly IContentManager _contentManager;
 
     public ABTestManager(
         ISession session,
-        IIdGenerator idGenerator)
+        IIdGenerator idGenerator,
+        IContentManager contentManager)
     {
         _session = session;
         _idGenerator = idGenerator;
+        _contentManager = contentManager;
     }
 
     /// <inheritdoc />
@@ -98,6 +102,10 @@ public class ABTestManager : IABTestManager
             throw new InvalidOperationException("Variant A and Variant B must be different content items.");
         }
 
+        // Capture variant display names
+        test.VariantADisplayName = await GetContentDisplayNameAsync(test.VariantAContentItemId);
+        test.VariantBDisplayName = await GetContentDisplayNameAsync(test.VariantBContentItemId);
+
         await _session.SaveAsync(test, collection: ABTest.Collection);
 
         return test;
@@ -118,6 +126,17 @@ public class ABTestManager : IABTestManager
             test.VariantAContentItemId == test.VariantBContentItemId)
         {
             throw new InvalidOperationException("Variant A and Variant B must be different content items.");
+        }
+
+        // Update variant display names only if variants are available
+        if (test.VariantAState == VariantState.Available)
+        {
+            test.VariantADisplayName = await GetContentDisplayNameAsync(test.VariantAContentItemId);
+        }
+
+        if (test.VariantBState == VariantState.Available)
+        {
+            test.VariantBDisplayName = await GetContentDisplayNameAsync(test.VariantBContentItemId);
         }
 
         test.ModifiedUtc = DateTime.UtcNow;
@@ -151,6 +170,32 @@ public class ABTestManager : IABTestManager
             string.IsNullOrEmpty(test.VariantBContentItemId))
         {
             throw new InvalidOperationException("Both variants must be selected before activating a test.");
+        }
+
+        // Check if any variant has been deleted
+        if (test.VariantAState == VariantState.Deleted)
+        {
+            throw new InvalidOperationException(
+                $"Cannot activate test: Variant A ({test.VariantADisplayName ?? test.VariantAContentItemId}) has been deleted.");
+        }
+
+        if (test.VariantBState == VariantState.Deleted)
+        {
+            throw new InvalidOperationException(
+                $"Cannot activate test: Variant B ({test.VariantBDisplayName ?? test.VariantBContentItemId}) has been deleted.");
+        }
+
+        // Check if any variant is unpublished
+        if (test.VariantAState == VariantState.Unpublished)
+        {
+            throw new InvalidOperationException(
+                $"Cannot activate test: Variant A ({test.VariantADisplayName ?? test.VariantAContentItemId}) is unpublished.");
+        }
+
+        if (test.VariantBState == VariantState.Unpublished)
+        {
+            throw new InvalidOperationException(
+                $"Cannot activate test: Variant B ({test.VariantBDisplayName ?? test.VariantBContentItemId}) is unpublished.");
         }
 
         // Validate variants are not used in other active tests
@@ -189,5 +234,16 @@ public class ABTestManager : IABTestManager
         await _session.SaveAsync(test, collection: ABTest.Collection);
 
         return test;
+    }
+
+    private async Task<string> GetContentDisplayNameAsync(string contentItemId)
+    {
+        if (string.IsNullOrEmpty(contentItemId))
+        {
+            return null;
+        }
+
+        var contentItem = await _contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+        return contentItem?.DisplayText ?? contentItemId;
     }
 }

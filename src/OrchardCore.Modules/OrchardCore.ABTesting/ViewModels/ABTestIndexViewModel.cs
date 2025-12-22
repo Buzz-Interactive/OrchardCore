@@ -1,3 +1,5 @@
+using OrchardCore.ABTesting.Models;
+
 namespace OrchardCore.ABTesting.ViewModels;
 
 /// <summary>
@@ -60,4 +62,24 @@ public class ABTestEntry
     /// When the test was created.
     /// </summary>
     public DateTime CreatedUtc { get; set; }
+
+    /// <summary>
+    /// State of Variant A content item.
+    /// </summary>
+    public VariantState VariantAState { get; set; }
+
+    /// <summary>
+    /// State of Variant B content item.
+    /// </summary>
+    public VariantState VariantBState { get; set; }
+
+    /// <summary>
+    /// Whether either variant has been deleted.
+    /// </summary>
+    public bool HasDeletedVariant { get; set; }
+
+    /// <summary>
+    /// Whether either variant is unavailable (deleted or unpublished).
+    /// </summary>
+    public bool HasUnavailableVariant { get; set; }
 }

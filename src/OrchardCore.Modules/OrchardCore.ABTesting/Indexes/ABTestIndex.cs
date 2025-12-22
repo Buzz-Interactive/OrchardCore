@@ -1,3 +1,4 @@
+using OrchardCore.ABTesting.Models;
 using YesSql.Indexes;
 
 namespace OrchardCore.ABTesting.Indexes;
@@ -31,4 +32,14 @@ public class ABTestIndex : MapIndex
     /// When the test was created.
     /// </summary>
     public DateTime CreatedUtc { get; set; }
+
+    /// <summary>
+    /// State of the Variant A content item.
+    /// </summary>
+    public VariantState VariantAState { get; set; }
+
+    /// <summary>
+    /// State of the Variant B content item.
+    /// </summary>
+    public VariantState VariantBState { get; set; }
 }

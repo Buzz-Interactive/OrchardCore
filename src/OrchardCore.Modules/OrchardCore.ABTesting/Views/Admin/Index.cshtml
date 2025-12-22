@@ -34,7 +34,19 @@
                                     <a asp-action="Edit" asp-route-testId="@entry.TestId">@entry.Name</a>
                                 </div>
                                 <div class="me-2">
-                                    @if (entry.IsActive)
+                                    @if (entry.HasDeletedVariant)
+                                    {
+                                        <span class="badge ta-badge" data-bs-toggle="tooltip" title="@T["One or more variants have been deleted. This test cannot be reactivated."]">
+                                            <i class="fa-solid fa-exclamation-triangle text-danger" aria-hidden="true"></i> @T["Read-only"]
+                                        </span>
+                                    }
+                                    else if (entry.HasUnavailableVariant)
+                                    {
+                                        <span class="badge ta-badge" data-bs-toggle="tooltip" title="@T["One or more variants are unpublished. Publish them to activate this test."]">
+                                            <i class="fa-solid fa-exclamation-triangle text-warning" aria-hidden="true"></i> @T["Variant Unpublished"]
+                                        </span>
+                                    }
+                                    else if (entry.IsActive)
                                     {
                                         <span class="badge ta-badge font-weight-normal" data-bs-toggle="tooltip" title="@T["Status"]">
                                             <i class="fa-solid fa-check text-success" aria-hidden="true"></i> @T["Active"]
@@ -64,14 +76,26 @@
                                 <a class="btn btn-sm btn-info" asp-action="Results" asp-route-testId="@entry.TestId" role="button">
                                     <i class="fa-solid fa-chart-bar" aria-hidden="true"></i> @T["Results"]
                                 </a>
-                                <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-testId="@entry.TestId" role="button">@T["Edit"]</a>
+
+                                @if (!entry.HasDeletedVariant)
+                                {
+                                    <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-testId="@entry.TestId" role="button">@T["Edit"]</a>
+                                }
+
                                 @if (entry.IsActive)
                                 {
                                     <a class="btn btn-sm btn-warning" asp-action="Deactivate" asp-route-testId="@entry.TestId" role="button" data-url-af="UnsafeUrl">@T["Deactivate"]</a>
                                 }
-                                else
+                                else if (!entry.HasDeletedVariant)
                                 {
-                                    <a class="btn btn-sm btn-success" asp-action="Activate" asp-route-testId="@entry.TestId" role="button" data-url-af="UnsafeUrl">@T["Activate"]</a>
+                                    @if (entry.HasUnavailableVariant)
+                                    {
+                                        <span class="btn btn-sm btn-success disabled" data-bs-toggle="tooltip" title="@T["Cannot activate - variant unpublished"]">@T["Activate"]</span>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-sm btn-success" asp-action="Activate" asp-route-testId="@entry.TestId" role="button" data-url-af="UnsafeUrl">@T["Activate"]</a>
+                                    }
                                 }
                                 <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-testId="@entry.TestId" role="button" data-url-af="UnsafeUrl RemoveUrl" data-title="@T["Delete A/B Test"]" data-message="@deleteMessage" data-ok-text="@T["Ok"]" data-cancel-text="@T["Cancel"]">@T["Delete"]</a>
                             </div>

@@ -77,8 +77,13 @@ public class AdminController : Controller
             var (impressionsA, impressionsB) = await _trackingService.GetImpressionsAsync(test.TestId);
             var (conversionsA, conversionsB) = await _trackingService.GetConversionsAsync(test.TestId);
 
-            var variantAName = await GetContentDisplayTextAsync(test.VariantAContentItemId);
-            var variantBName = await GetContentDisplayTextAsync(test.VariantBContentItemId);
+            var variantAName = GetVariantDisplayText(test, isVariantA: true);
+            var variantBName = GetVariantDisplayText(test, isVariantA: false);
+
+            var hasDeletedVariant = test.VariantAState == VariantState.Deleted ||
+                                    test.VariantBState == VariantState.Deleted;
+            var hasUnavailableVariant = test.VariantAState != VariantState.Available ||
+                                        test.VariantBState != VariantState.Available;
 
             entries.Add(new ABTestEntry
             {
@@ -91,6 +96,10 @@ public class AdminController : Controller
                 TotalImpressions = impressionsA + impressionsB,
                 TotalConversions = conversionsA + conversionsB,
                 CreatedUtc = test.CreatedUtc,
+                VariantAState = test.VariantAState,
+                VariantBState = test.VariantBState,
+                HasDeletedVariant = hasDeletedVariant,
+                HasUnavailableVariant = hasUnavailableVariant,
             });
         }
 
@@ -190,6 +199,15 @@ public class AdminController : Controller
             return NotFound();
         }
 
+        // If any variant has been deleted, redirect to Results page (test is read-only)
+        var hasDeletedVariant = test.VariantAState == VariantState.Deleted ||
+                                test.VariantBState == VariantState.Deleted;
+        if (hasDeletedVariant)
+        {
+            await _notifier.WarningAsync(H["This test cannot be edited because one or more variants have been deleted. You can view the results below."]);
+            return RedirectToAction(nameof(Results), new { testId });
+        }
+
         var (impressionsA, impressionsB) = await _trackingService.GetImpressionsAsync(testId);
         var (conversionsA, conversionsB) = await _trackingService.GetConversionsAsync(testId);
         var totalImpressions = impressionsA + impressionsB;
@@ -236,6 +254,15 @@ public class AdminController : Controller
         if (test == null)
         {
             return NotFound();
+        }
+
+        // If any variant has been deleted, block edits
+        var hasDeletedVariant = test.VariantAState == VariantState.Deleted ||
+                                test.VariantBState == VariantState.Deleted;
+        if (hasDeletedVariant)
+        {
+            await _notifier.ErrorAsync(H["This test cannot be edited because one or more variants have been deleted."]);
+            return RedirectToAction(nameof(Results), new { testId });
         }
 
         if (!ModelState.IsValid)
@@ -392,9 +419,9 @@ public class AdminController : Controller
         // Get impression counts
         var (variantAImpressions, variantBImpressions) = await _trackingService.GetImpressionsAsync(testId);
 
-        // Get variant names
-        var variantAName = await GetContentDisplayTextAsync(test.VariantAContentItemId);
-        var variantBName = await GetContentDisplayTextAsync(test.VariantBContentItemId);
+        // Get variant names (using cached names if content items are unavailable)
+        var variantAName = GetVariantDisplayText(test, isVariantA: true);
+        var variantBName = GetVariantDisplayText(test, isVariantA: false);
 
         // Calculate percentages
         var totalImpressions = variantAImpressions + variantBImpressions;
@@ -622,6 +649,23 @@ public class AdminController : Controller
             GoalType.CustomEvent => "Event",
             GoalType.TimeOnPage => "Time on Page",
             _ => "None"
+        };
+    }
+
+    private static string GetVariantDisplayText(ABTest test, bool isVariantA)
+    {
+        var state = isVariantA ? test.VariantAState : test.VariantBState;
+        var cachedName = isVariantA ? test.VariantADisplayName : test.VariantBDisplayName;
+        var contentItemId = isVariantA ? test.VariantAContentItemId : test.VariantBContentItemId;
+
+        // Use cached name if variant is unavailable, otherwise return the ID as fallback
+        var displayName = cachedName ?? contentItemId ?? "(Not selected)";
+
+        return state switch
+        {
+            VariantState.Unpublished => $"{displayName} (Unpublished)",
+            VariantState.Deleted => $"{displayName} (Deleted)",
+            _ => displayName
         };
     }
 }
