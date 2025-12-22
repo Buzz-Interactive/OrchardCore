@@ -57,6 +57,11 @@ public class ABTestInfo
     public string GoalEventName { get; set; }
 
     /// <summary>
+    /// Time in seconds for TimeOnPage goals.
+    /// </summary>
+    public int GoalTimeOnPageSeconds { get; set; }
+
+    /// <summary>
     /// Gets the ContentItemId of the variant that should be shown to the visitor.
     /// </summary>
     /// <param name="assignedVariant">The variant assigned to the visitor.</param>

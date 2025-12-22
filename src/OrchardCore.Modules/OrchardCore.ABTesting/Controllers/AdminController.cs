@@ -164,6 +164,7 @@ public class AdminController : Controller
             GoalSelector = viewModel.GoalSelector,
             GoalScrollPercentage = viewModel.GoalScrollPercentage,
             GoalEventName = viewModel.GoalEventName,
+            GoalTimeOnPageSeconds = viewModel.GoalTimeOnPageSeconds,
             MinimumSampleSize = viewModel.MinimumSampleSize,
             ConfidenceThreshold = viewModel.ConfidenceThreshold,
         };
@@ -208,6 +209,7 @@ public class AdminController : Controller
             GoalSelector = test.GoalSelector,
             GoalScrollPercentage = test.GoalScrollPercentage,
             GoalEventName = test.GoalEventName,
+            GoalTimeOnPageSeconds = test.GoalTimeOnPageSeconds,
             MinimumSampleSize = test.MinimumSampleSize,
             ConfidenceThreshold = test.ConfidenceThreshold,
             IsActive = test.IsActive,
@@ -292,6 +294,7 @@ public class AdminController : Controller
             test.GoalSelector = viewModel.GoalSelector;
             test.GoalScrollPercentage = viewModel.GoalScrollPercentage;
             test.GoalEventName = viewModel.GoalEventName;
+            test.GoalTimeOnPageSeconds = viewModel.GoalTimeOnPageSeconds;
         }
 
         await _abTestManager.UpdateAsync(test);
@@ -596,6 +599,14 @@ public class AdminController : Controller
                     return false;
                 }
                 break;
+
+            case GoalType.TimeOnPage:
+                if (viewModel.GoalTimeOnPageSeconds < 5 || viewModel.GoalTimeOnPageSeconds > 300)
+                {
+                    ModelState.AddModelError(nameof(viewModel.GoalTimeOnPageSeconds), "Time on page must be between 5 and 300 seconds.");
+                    return false;
+                }
+                break;
         }
 
         return true;
@@ -609,6 +620,7 @@ public class AdminController : Controller
             GoalType.FormSubmission => "Form Submit",
             GoalType.ScrollPercentage => "Scroll",
             GoalType.CustomEvent => "Event",
+            GoalType.TimeOnPage => "Time on Page",
             _ => "None"
         };
     }

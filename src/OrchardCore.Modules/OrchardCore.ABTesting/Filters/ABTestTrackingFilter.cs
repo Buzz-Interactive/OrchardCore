@@ -117,6 +117,7 @@ public sealed class ABTestTrackingFilter : IAsyncResultFilter
             GoalType.FormSubmission => GenerateFormSubmissionScript(testInfo.GoalSelector, testId, variantName),
             GoalType.ScrollPercentage => GenerateScrollTrackingScript(testInfo.GoalScrollPercentage, testId, variantName),
             GoalType.CustomEvent => GenerateCustomEventScript(testInfo.GoalEventName, testId, variantName),
+            GoalType.TimeOnPage => GenerateTimeOnPageScript(testInfo.GoalTimeOnPageSeconds, testId, variantName),
             _ => null
         };
     }
@@ -230,6 +231,51 @@ public sealed class ABTestTrackingFilter : IAsyncResultFilter
             }}).catch(function() {{}});
         }}
     }});
+}})();
+</script>";
+    }
+
+    private static string GenerateTimeOnPageScript(int seconds, string testId, string variant)
+    {
+        return $@"<script>
+(function() {{
+    var key = 'abtest_conv_{testId}';
+    if (sessionStorage.getItem(key)) return;
+
+    var threshold = {seconds} * 1000;
+    var elapsed = 0;
+    var lastTick = Date.now();
+    var isVisible = !document.hidden;
+
+    function checkTime() {{
+        if (sessionStorage.getItem(key)) return;
+
+        var now = Date.now();
+        if (isVisible) {{
+            elapsed += now - lastTick;
+        }}
+        lastTick = now;
+
+        if (elapsed >= threshold) {{
+            sessionStorage.setItem(key, '1');
+            fetch('/api/abtest/conversion', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify({{ testId: '{testId}', variant: '{variant}' }})
+            }}).catch(function() {{}});
+        }}
+    }}
+
+    document.addEventListener('visibilitychange', function() {{
+        var now = Date.now();
+        if (isVisible) {{
+            elapsed += now - lastTick;
+        }}
+        lastTick = now;
+        isVisible = !document.hidden;
+    }});
+
+    setInterval(checkTime, 1000);
 }})();
 </script>";
     }

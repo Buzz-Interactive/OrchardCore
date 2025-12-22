@@ -29,4 +29,9 @@ public enum GoalType
     /// Track a custom JavaScript event.
     /// </summary>
     CustomEvent = 4,
+
+    /// <summary>
+    /// Track time spent on page (active time only, pauses when tab is hidden).
+    /// </summary>
+    TimeOnPage = 5,
 }

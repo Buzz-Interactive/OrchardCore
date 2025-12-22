@@ -71,6 +71,7 @@ public class ABTestLookupService : IABTestLookupService
             GoalSelector = test.GoalSelector,
             GoalScrollPercentage = test.GoalScrollPercentage,
             GoalEventName = test.GoalEventName,
+            GoalTimeOnPageSeconds = test.GoalTimeOnPageSeconds,
         };
     }
 }

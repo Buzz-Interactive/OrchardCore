@@ -67,6 +67,12 @@ public class ABTest : Entity
     public string GoalEventName { get; set; }
 
     /// <summary>
+    /// Time in seconds that the user must spend on the page for TimeOnPage goals.
+    /// Valid range is 5-300 seconds. Default is 30 seconds.
+    /// </summary>
+    public int GoalTimeOnPageSeconds { get; set; } = 30;
+
+    /// <summary>
     /// Minimum number of impressions required per variant before statistical analysis is performed.
     /// Default is 50. Valid range is 30-500.
     /// </summary>

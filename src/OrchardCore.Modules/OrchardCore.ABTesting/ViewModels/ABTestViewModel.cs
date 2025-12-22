@@ -92,6 +92,12 @@ public class ABTestViewModel
     public string GoalEventName { get; set; }
 
     /// <summary>
+    /// Time in seconds for TimeOnPage goals.
+    /// </summary>
+    [Range(5, 300, ErrorMessage = "Time on page must be between 5 and 300 seconds.")]
+    public int GoalTimeOnPageSeconds { get; set; } = 30;
+
+    /// <summary>
     /// Minimum number of impressions required per variant before statistical analysis is performed.
     /// </summary>
     [Range(30, 500, ErrorMessage = "Minimum sample size must be between 30 and 500.")]

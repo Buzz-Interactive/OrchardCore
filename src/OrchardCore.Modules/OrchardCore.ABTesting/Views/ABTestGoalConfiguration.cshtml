@@ -4,6 +4,7 @@
     string goalSelector = Model.GoalSelector;
     int goalScrollPercentage = Model.GoalScrollPercentage;
     string goalEventName = Model.GoalEventName;
+    int goalTimeOnPageSeconds = Model.GoalTimeOnPageSeconds;
     bool areGoalsLocked = Model.AreGoalsLocked;
 }
 
@@ -23,6 +24,7 @@
         <option value="2" selected="@(goalType == GoalType.FormSubmission)">@T["Form Submission"]</option>
         <option value="3" selected="@(goalType == GoalType.ScrollPercentage)">@T["Scroll Percentage"]</option>
         <option value="4" selected="@(goalType == GoalType.CustomEvent)">@T["Custom Event"]</option>
+        <option value="5" selected="@(goalType == GoalType.TimeOnPage)">@T["Time on Page"]</option>
     </select>
     <span class="text-danger field-validation-valid" data-valmsg-for="GoalType" data-valmsg-replace="true"></span>
 </div>
@@ -51,12 +53,23 @@
     <div class="form-text">@T["The custom JavaScript event name to listen for. Trigger with: window.dispatchEvent(new Event('event-name'))"]</div>
 </div>
 
+<div class="mb-3 w-50" id="goalTimeOnPageRow" style="display: none;">
+    <label for="GoalTimeOnPageSeconds" class="form-label">@T["Time on Page (seconds)"]</label>
+    <div class="input-group" style="max-width: 200px;">
+        <input type="number" min="5" max="300" class="form-control" id="GoalTimeOnPageSeconds" name="GoalTimeOnPageSeconds" value="@goalTimeOnPageSeconds" disabled="@areGoalsLocked" />
+        <span class="input-group-text">sec</span>
+    </div>
+    <span class="text-danger field-validation-valid" data-valmsg-for="GoalTimeOnPageSeconds" data-valmsg-replace="true"></span>
+    <div class="form-text">@T["Track when user spends this many seconds on the page. Only active time is counted (pauses when tab is hidden)."]</div>
+</div>
+
 @if (areGoalsLocked)
 {
     <input type="hidden" name="GoalType" value="@((int)goalType)" />
     <input type="hidden" name="GoalSelector" value="@goalSelector" />
     <input type="hidden" name="GoalScrollPercentage" value="@goalScrollPercentage" />
     <input type="hidden" name="GoalEventName" value="@goalEventName" />
+    <input type="hidden" name="GoalTimeOnPageSeconds" value="@goalTimeOnPageSeconds" />
 }
 
 <script at="Foot">
@@ -65,6 +78,7 @@
         var selectorRow = document.getElementById('goalSelectorRow');
         var scrollRow = document.getElementById('goalScrollRow');
         var eventRow = document.getElementById('goalEventRow');
+        var timeOnPageRow = document.getElementById('goalTimeOnPageRow');
 
         function updateGoalFields() {
             var value = parseInt(goalTypeSelect.value);
@@ -74,6 +88,8 @@
             scrollRow.style.display = (value === 3) ? 'block' : 'none';
             // 4 = CustomEvent
             eventRow.style.display = (value === 4) ? 'block' : 'none';
+            // 5 = TimeOnPage
+            timeOnPageRow.style.display = (value === 5) ? 'block' : 'none';
         }
 
         goalTypeSelect.addEventListener('change', updateGoalFields);
