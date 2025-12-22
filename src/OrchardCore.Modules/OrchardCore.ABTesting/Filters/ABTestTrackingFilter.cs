@@ -82,9 +82,12 @@ public sealed class ABTestTrackingFilter : IAsyncResultFilter
         var variantName = assignedVariant.Value.ToString();
         var testId = _jsEncoder.Encode(testInfo.TestId);
 
-        // Inject impression tracking script
+        // Inject impression tracking script with session-based deduplication
         var impressionScript = new HtmlString($@"<script>
 (function() {{
+    var key = 'abtest_imp_{testId}';
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
     fetch('/api/abtest/impression', {{
         method: 'POST',
         headers: {{ 'Content-Type': 'application/json' }},
@@ -128,11 +131,12 @@ public sealed class ABTestTrackingFilter : IAsyncResultFilter
         var encodedSelector = _jsEncoder.Encode(selector);
         return $@"<script>
 (function() {{
-    var recorded = false;
+    var key = 'abtest_conv_{testId}';
+    if (sessionStorage.getItem(key)) return;
     document.querySelectorAll('{encodedSelector}').forEach(function(el) {{
         el.addEventListener('click', function() {{
-            if (!recorded) {{
-                recorded = true;
+            if (!sessionStorage.getItem(key)) {{
+                sessionStorage.setItem(key, '1');
                 fetch('/api/abtest/conversion', {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
@@ -155,13 +159,14 @@ public sealed class ABTestTrackingFilter : IAsyncResultFilter
         var encodedSelector = _jsEncoder.Encode(selector);
         return $@"<script>
 (function() {{
-    var recorded = false;
+    var key = 'abtest_conv_{testId}';
+    if (sessionStorage.getItem(key)) return;
     var forms = document.querySelectorAll('{encodedSelector}');
     forms.forEach(function(form) {{
         if (form.tagName === 'FORM') {{
             form.addEventListener('submit', function() {{
-                if (!recorded) {{
-                    recorded = true;
+                if (!sessionStorage.getItem(key)) {{
+                    sessionStorage.setItem(key, '1');
                     fetch('/api/abtest/conversion', {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
@@ -179,16 +184,17 @@ public sealed class ABTestTrackingFilter : IAsyncResultFilter
     {
         return $@"<script>
 (function() {{
-    var recorded = false;
+    var key = 'abtest_conv_{testId}';
+    if (sessionStorage.getItem(key)) return;
     var threshold = {percentage};
     window.addEventListener('scroll', function() {{
-        if (!recorded) {{
+        if (!sessionStorage.getItem(key)) {{
             var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             var docHeight = document.documentElement.scrollHeight - window.innerHeight;
             if (docHeight > 0) {{
                 var scrollPercent = (scrollTop / docHeight) * 100;
                 if (scrollPercent >= threshold) {{
-                    recorded = true;
+                    sessionStorage.setItem(key, '1');
                     fetch('/api/abtest/conversion', {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
@@ -212,10 +218,11 @@ public sealed class ABTestTrackingFilter : IAsyncResultFilter
         var encodedEventName = _jsEncoder.Encode(eventName);
         return $@"<script>
 (function() {{
-    var recorded = false;
+    var key = 'abtest_conv_{testId}';
+    if (sessionStorage.getItem(key)) return;
     window.addEventListener('{encodedEventName}', function() {{
-        if (!recorded) {{
-            recorded = true;
+        if (!sessionStorage.getItem(key)) {{
+            sessionStorage.setItem(key, '1');
             fetch('/api/abtest/conversion', {{
                 method: 'POST',
                 headers: {{ 'Content-Type': 'application/json' }},
