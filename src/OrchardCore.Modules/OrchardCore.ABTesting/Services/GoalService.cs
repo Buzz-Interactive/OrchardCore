@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Dapper;
 using OrchardCore.ABTesting.Models;
 using OrchardCore.ABTesting.Records;
@@ -39,31 +40,17 @@ public class GoalService : IGoalService
 
         try
         {
-            // Check if record exists
-            var selectSql = $"SELECT {dialect.QuoteForColumnName("Id")}, " +
-                           $"{dialect.QuoteForColumnName("VariantAConversions")}, " +
-                           $"{dialect.QuoteForColumnName("VariantBConversions")} " +
-                           $"FROM {dialect.QuoteForTableName(tableName, configuration.Schema)} " +
+            // Try UPDATE first (atomic - no race condition)
+            var column = variant == ABVariant.A ? "VariantAConversions" : "VariantBConversions";
+            var updateSql = $"UPDATE {dialect.QuoteForTableName(tableName, configuration.Schema)} " +
+                           $"SET {dialect.QuoteForColumnName(column)} = {dialect.QuoteForColumnName(column)} + 1 " +
                            $"WHERE {dialect.QuoteForColumnName("TestId")} = @TestId";
 
-            var existing = await connection.QueryFirstOrDefaultAsync<ABTestGoalRecord>(
-                selectSql,
-                new { TestId = testId },
-                transaction);
+            var rowsAffected = await connection.ExecuteAsync(updateSql, new { TestId = testId }, transaction);
 
-            if (existing != null)
+            if (rowsAffected == 0)
             {
-                // Update existing record
-                var column = variant == ABVariant.A ? "VariantAConversions" : "VariantBConversions";
-                var updateSql = $"UPDATE {dialect.QuoteForTableName(tableName, configuration.Schema)} " +
-                               $"SET {dialect.QuoteForColumnName(column)} = {dialect.QuoteForColumnName(column)} + 1 " +
-                               $"WHERE {dialect.QuoteForColumnName("Id")} = @Id";
-
-                await connection.ExecuteAsync(updateSql, new { existing.Id }, transaction);
-            }
-            else
-            {
-                // Insert new record
+                // Record doesn't exist - INSERT new record
                 var variantACount = variant == ABVariant.A ? 1 : 0;
                 var variantBCount = variant == ABVariant.B ? 1 : 0;
 
@@ -73,12 +60,20 @@ public class GoalService : IGoalService
                                $"{dialect.QuoteForColumnName("VariantBConversions")}) " +
                                $"VALUES (@TestId, @VariantAConversions, @VariantBConversions)";
 
-                await connection.ExecuteAsync(insertSql, new
+                try
                 {
-                    TestId = testId,
-                    VariantAConversions = variantACount,
-                    VariantBConversions = variantBCount,
-                }, transaction);
+                    await connection.ExecuteAsync(insertSql, new
+                    {
+                        TestId = testId,
+                        VariantAConversions = variantACount,
+                        VariantBConversions = variantBCount,
+                    }, transaction);
+                }
+                catch (DbException)
+                {
+                    // Another request inserted first - retry UPDATE
+                    await connection.ExecuteAsync(updateSql, new { TestId = testId }, transaction);
+                }
             }
 
             await transaction.CommitAsync();
