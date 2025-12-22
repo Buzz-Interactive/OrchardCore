@@ -88,6 +88,13 @@ public class AdminController : Controller
             var hasUnavailableVariant = test.VariantAState != VariantState.Available ||
                                         test.VariantBState != VariantState.Available;
 
+            var winningVariantDisplayName = test.WinningVariant switch
+            {
+                ABVariant.A => variantAName,
+                ABVariant.B => variantBName,
+                _ => null,
+            };
+
             entries.Add(new ABTestEntry
             {
                 TestId = test.TestId,
@@ -103,6 +110,9 @@ public class AdminController : Controller
                 VariantBState = test.VariantBState,
                 HasDeletedVariant = hasDeletedVariant,
                 HasUnavailableVariant = hasUnavailableVariant,
+                IsConcluded = test.IsConcluded,
+                WinningVariant = test.WinningVariant,
+                WinningVariantDisplayName = winningVariantDisplayName,
             });
         }
 

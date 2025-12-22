@@ -82,4 +82,19 @@ public class ABTestEntry
     /// Whether either variant is unavailable (deleted or unpublished).
     /// </summary>
     public bool HasUnavailableVariant { get; set; }
+
+    /// <summary>
+    /// Whether the test has been concluded (winner declared).
+    /// </summary>
+    public bool IsConcluded { get; set; }
+
+    /// <summary>
+    /// The winning variant (A or B), null if test not concluded.
+    /// </summary>
+    public ABVariant? WinningVariant { get; set; }
+
+    /// <summary>
+    /// Display name of the winning variant.
+    /// </summary>
+    public string WinningVariantDisplayName { get; set; }
 }

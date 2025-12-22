@@ -31,10 +31,23 @@
                         <div class="col-lg col-12 d-flex align-items-center">
                             <div class="summary d-flex flex-column flex-md-row flex-wrap">
                                 <div class="me-2">
-                                    <a asp-action="Edit" asp-route-testId="@entry.TestId">@entry.Name</a>
+                                    @if (entry.HasDeletedVariant || entry.IsConcluded)
+                                    {
+                                        <a asp-action="Results" asp-route-testId="@entry.TestId">@entry.Name</a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-action="Edit" asp-route-testId="@entry.TestId">@entry.Name</a>
+                                    }
                                 </div>
                                 <div class="me-2">
-                                    @if (entry.HasDeletedVariant)
+                                    @if (entry.IsConcluded)
+                                    {
+                                        <span class="badge ta-badge" data-bs-toggle="tooltip" title="@T["This test has concluded. The winning variant has been selected."]">
+                                            <i class="fa-solid fa-trophy text-success" aria-hidden="true"></i> @T["Concluded - {0} Won", entry.WinningVariantDisplayName]
+                                        </span>
+                                    }
+                                    else if (entry.HasDeletedVariant)
                                     {
                                         <span class="badge ta-badge" data-bs-toggle="tooltip" title="@T["One or more variants have been deleted. This test cannot be reactivated."]">
                                             <i class="fa-solid fa-exclamation-triangle text-danger" aria-hidden="true"></i> @T["Read-only"]
@@ -77,7 +90,7 @@
                                     <i class="fa-solid fa-chart-bar" aria-hidden="true"></i> @T["Results"]
                                 </a>
 
-                                @if (!entry.HasDeletedVariant)
+                                @if (!entry.HasDeletedVariant && !entry.IsConcluded)
                                 {
                                     <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-testId="@entry.TestId" role="button">@T["Edit"]</a>
                                 }
@@ -86,7 +99,7 @@
                                 {
                                     <a class="btn btn-sm btn-warning" asp-action="Deactivate" asp-route-testId="@entry.TestId" role="button" data-url-af="UnsafeUrl">@T["Deactivate"]</a>
                                 }
-                                else if (!entry.HasDeletedVariant)
+                                else if (!entry.HasDeletedVariant && !entry.IsConcluded)
                                 {
                                     @if (entry.HasUnavailableVariant)
                                     {
