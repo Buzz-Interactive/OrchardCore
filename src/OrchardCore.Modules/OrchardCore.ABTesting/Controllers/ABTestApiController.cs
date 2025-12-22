@@ -15,19 +15,16 @@ namespace OrchardCore.ABTesting.Controllers;
 [AllowAnonymous]
 public class ABTestApiController : ControllerBase
 {
-    private readonly IImpressionService _impressionService;
-    private readonly IGoalService _goalService;
+    private readonly ITrackingService _trackingService;
     private readonly IABTestLookupService _lookupService;
     private readonly IBotDetectionService _botDetectionService;
 
     public ABTestApiController(
-        IImpressionService impressionService,
-        IGoalService goalService,
+        ITrackingService trackingService,
         IABTestLookupService lookupService,
         IBotDetectionService botDetectionService)
     {
-        _impressionService = impressionService;
-        _goalService = goalService;
+        _trackingService = trackingService;
         _lookupService = lookupService;
         _botDetectionService = botDetectionService;
     }
@@ -67,7 +64,7 @@ public class ABTestApiController : ControllerBase
         }
 
         // Record the impression
-        await _impressionService.RecordImpressionAsync(model.TestId, variant);
+        await _trackingService.RecordImpressionAsync(model.TestId, variant);
 
         return Ok();
     }
@@ -107,7 +104,7 @@ public class ABTestApiController : ControllerBase
         }
 
         // Record the conversion
-        await _goalService.RecordConversionAsync(model.TestId, variant);
+        await _trackingService.RecordConversionAsync(model.TestId, variant);
 
         return Ok();
     }

@@ -25,8 +25,7 @@ public class AdminController : Controller
 {
     private readonly IABTestManager _abTestManager;
     private readonly IContentManager _contentManager;
-    private readonly IImpressionService _impressionService;
-    private readonly IGoalService _goalService;
+    private readonly ITrackingService _trackingService;
     private readonly IStatisticalAnalysisService _statisticalAnalysisService;
     private readonly IAuthorizationService _authorizationService;
     private readonly IShapeFactory _shapeFactory;
@@ -39,8 +38,7 @@ public class AdminController : Controller
     public AdminController(
         IABTestManager abTestManager,
         IContentManager contentManager,
-        IImpressionService impressionService,
-        IGoalService goalService,
+        ITrackingService trackingService,
         IStatisticalAnalysisService statisticalAnalysisService,
         IAuthorizationService authorizationService,
         IShapeFactory shapeFactory,
@@ -52,8 +50,7 @@ public class AdminController : Controller
     {
         _abTestManager = abTestManager;
         _contentManager = contentManager;
-        _impressionService = impressionService;
-        _goalService = goalService;
+        _trackingService = trackingService;
         _statisticalAnalysisService = statisticalAnalysisService;
         _authorizationService = authorizationService;
         _shapeFactory = shapeFactory;
@@ -77,8 +74,8 @@ public class AdminController : Controller
 
         foreach (var test in tests)
         {
-            var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(test.TestId);
-            var (conversionsA, conversionsB) = await _goalService.GetConversionsAsync(test.TestId);
+            var (impressionsA, impressionsB) = await _trackingService.GetImpressionsAsync(test.TestId);
+            var (conversionsA, conversionsB) = await _trackingService.GetConversionsAsync(test.TestId);
 
             var variantAName = await GetContentDisplayTextAsync(test.VariantAContentItemId);
             var variantBName = await GetContentDisplayTextAsync(test.VariantBContentItemId);
@@ -192,8 +189,8 @@ public class AdminController : Controller
             return NotFound();
         }
 
-        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(testId);
-        var (conversionsA, conversionsB) = await _goalService.GetConversionsAsync(testId);
+        var (impressionsA, impressionsB) = await _trackingService.GetImpressionsAsync(testId);
+        var (conversionsA, conversionsB) = await _trackingService.GetConversionsAsync(testId);
         var totalImpressions = impressionsA + impressionsB;
 
         var viewModel = new ABTestViewModel
@@ -254,7 +251,7 @@ public class AdminController : Controller
         }
 
         // Check if goals are locked
-        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(viewModel.TestId);
+        var (impressionsA, impressionsB) = await _trackingService.GetImpressionsAsync(viewModel.TestId);
         var totalImpressions = impressionsA + impressionsB;
         var areGoalsLocked = totalImpressions > 0;
 
@@ -390,7 +387,7 @@ public class AdminController : Controller
         }
 
         // Get impression counts
-        var (variantAImpressions, variantBImpressions) = await _impressionService.GetImpressionsAsync(testId);
+        var (variantAImpressions, variantBImpressions) = await _trackingService.GetImpressionsAsync(testId);
 
         // Get variant names
         var variantAName = await GetContentDisplayTextAsync(test.VariantAContentItemId);
@@ -406,7 +403,7 @@ public class AdminController : Controller
             : 0;
 
         // Get conversion counts
-        var (variantAConversions, variantBConversions) = await _goalService.GetConversionsAsync(testId);
+        var (variantAConversions, variantBConversions) = await _trackingService.GetConversionsAsync(testId);
         var totalConversions = variantAConversions + variantBConversions;
 
         // Calculate conversion rates (conversions / impressions)
@@ -557,8 +554,8 @@ public class AdminController : Controller
         viewModel.SelectedVariantA = await GetSelectedItemAsync(viewModel.VariantAContentItemId);
         viewModel.SelectedVariantB = await GetSelectedItemAsync(viewModel.VariantBContentItemId);
 
-        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(viewModel.TestId);
-        var (conversionsA, conversionsB) = await _goalService.GetConversionsAsync(viewModel.TestId);
+        var (impressionsA, impressionsB) = await _trackingService.GetImpressionsAsync(viewModel.TestId);
+        var (conversionsA, conversionsB) = await _trackingService.GetConversionsAsync(viewModel.TestId);
         viewModel.TotalImpressions = impressionsA + impressionsB;
         viewModel.TotalConversions = conversionsA + conversionsB;
 

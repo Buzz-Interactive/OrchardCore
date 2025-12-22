@@ -33,14 +33,14 @@ public class VisitorAssignmentService : IVisitorAssignmentService
     private const string HttpContextItemsKey = "ABTesting_CurrentRequestAssignments";
 
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IImpressionService _impressionService;
+    private readonly ITrackingService _trackingService;
 
     public VisitorAssignmentService(
         IHttpContextAccessor httpContextAccessor,
-        IImpressionService impressionService)
+        ITrackingService trackingService)
     {
         _httpContextAccessor = httpContextAccessor;
-        _impressionService = impressionService;
+        _trackingService = trackingService;
     }
 
     /// <inheritdoc />
@@ -256,7 +256,7 @@ public class VisitorAssignmentService : IVisitorAssignmentService
     /// </summary>
     private async Task<int> GetBalancedPercentageAsync(string testId, int targetPercentageA)
     {
-        var (impressionsA, impressionsB) = await _impressionService.GetImpressionsAsync(testId);
+        var (impressionsA, impressionsB) = await _trackingService.GetImpressionsAsync(testId);
         var totalImpressions = impressionsA + impressionsB;
 
         // If no impressions yet, use the target percentage

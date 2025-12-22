@@ -25,8 +25,7 @@ public sealed class Startup : StartupBase
         // Register services
         services.AddScoped<IABTestManager, ABTestManager>();
         services.AddScoped<IABTestLookupService, ABTestLookupService>();
-        services.AddScoped<IImpressionService, ImpressionService>();
-        services.AddScoped<IGoalService, GoalService>();
+        services.AddScoped<ITrackingService, TrackingService>();
         services.AddScoped<IVisitorAssignmentService, VisitorAssignmentService>();
         services.AddScoped<IABTestContentResolver, ABTestContentResolver>();
         services.AddSingleton<IStatisticalAnalysisService, StatisticalAnalysisService>();
