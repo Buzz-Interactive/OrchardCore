@@ -1,14 +1,36 @@
 @using OrchardCore.ABTesting.Models
 @{
     bool hasGoal = Model.GoalType != GoalType.None;
+    bool isConcluded = Model.IsConcluded;
+    ABVariant? declaredWinner = Model.WinningVariant;
+    DateTime? concludedUtc = Model.ConcludedUtc;
 
     // Statistical analysis
     ABTestStatisticsResult statistics = Model.Statistics;
     bool isVariantAWinner = statistics?.WinningVariant == ABVariant.A;
     bool isVariantBWinner = statistics?.WinningVariant == ABVariant.B;
+
+    // Check if we can show declare winner buttons
+    bool canDeclareWinner = !isConcluded && Model.TotalImpressions > 0;
 }
 
-@if (hasGoal && statistics != null)
+@if (isConcluded)
+{
+    var winnerName = declaredWinner == ABVariant.A ? Model.VariantAName : Model.VariantBName;
+    var winnerLabel = declaredWinner == ABVariant.A ? T["Control (A)"] : T["Challenger (B)"];
+    <div class="alert alert-success mb-4">
+        <i class="fa-solid fa-flag-checkered me-2" aria-hidden="true"></i>
+        <strong>@T["Test Concluded"]</strong> &mdash;
+        @T["Winner: {0}", winnerLabel]
+        @if (concludedUtc.HasValue)
+        {
+            <span class="text-muted ms-2">
+                (@T["Declared {0}", concludedUtc.Value.ToString("g")])
+            </span>
+        }
+    </div>
+}
+else if (hasGoal && statistics != null)
 {
     @if (statistics.IsSignificant && statistics.WinningVariant.HasValue)
     {
@@ -74,24 +96,60 @@ else if (!hasGoal)
                     <th>@T["Variation"]</th>
                     <th class="text-end">@T["Sample Size"]</th>
                     <th class="text-end">@T["Traffic %"]</th>
+                    @if (canDeclareWinner)
+                    {
+                        <th class="text-end">@T["Action"]</th>
+                    }
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                <tr class="@(isConcluded && declaredWinner == ABVariant.A ? "table-success" : "")">
                     <td>
-                        <strong>@T["Control"]</strong>
-                        <br /><small class="text-muted">@Model.VariantAName</small>
+                        <div class="d-flex align-items-center">
+                            @if (isConcluded && declaredWinner == ABVariant.A)
+                            {
+                                <i class="fa-solid fa-trophy text-warning me-2" aria-hidden="true"></i>
+                            }
+                            <div>
+                                <strong>@T["Control"]</strong>
+                                <br /><small class="text-muted">@Model.VariantAName</small>
+                            </div>
+                        </div>
                     </td>
                     <td class="text-end align-middle">@Model.VariantAImpressions.ToString("N0")</td>
                     <td class="text-end align-middle">@Model.VariantAPercentage%</td>
+                    @if (canDeclareWinner)
+                    {
+                        <td class="text-end align-middle">
+                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="A" data-winner-name="@Model.VariantAName" data-loser-name="@Model.VariantBName">
+                                <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Declare Winner"]
+                            </button>
+                        </td>
+                    }
                 </tr>
-                <tr>
+                <tr class="@(isConcluded && declaredWinner == ABVariant.B ? "table-success" : "")">
                     <td>
-                        <strong>@T["Challenger"]</strong>
-                        <br /><small class="text-muted">@Model.VariantBName</small>
+                        <div class="d-flex align-items-center">
+                            @if (isConcluded && declaredWinner == ABVariant.B)
+                            {
+                                <i class="fa-solid fa-trophy text-warning me-2" aria-hidden="true"></i>
+                            }
+                            <div>
+                                <strong>@T["Challenger"]</strong>
+                                <br /><small class="text-muted">@Model.VariantBName</small>
+                            </div>
+                        </div>
                     </td>
                     <td class="text-end align-middle">@Model.VariantBImpressions.ToString("N0")</td>
                     <td class="text-end align-middle">@Model.VariantBPercentage%</td>
+                    @if (canDeclareWinner)
+                    {
+                        <td class="text-end align-middle">
+                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="B" data-winner-name="@Model.VariantBName" data-loser-name="@Model.VariantAName">
+                                <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Declare Winner"]
+                            </button>
+                        </td>
+                    }
                 </tr>
             </tbody>
         </table>
@@ -100,7 +158,7 @@ else if (!hasGoal)
 else
 {
     <div class="table-responsive">
-        <table class="table table-hover table-bordered">
+        <table class="table table-bordered">
             <thead class="table-light">
                 <tr>
                     <th>@T["Variation"]</th>
@@ -109,18 +167,25 @@ else
                     <th class="text-end">@T["Conversion Rate"]</th>
                     <th class="text-end">@T["Uplift"]</th>
                     <th class="text-end">@T["Probability to Be Best"]</th>
+                    @if (canDeclareWinner)
+                    {
+                        <th class="text-end"></th>
+                    }
                 </tr>
             </thead>
             <tbody>
-                <tr class="@(isVariantAWinner ? "table-success" : "")">
+                <tr class="@(isVariantAWinner || (isConcluded && declaredWinner == ABVariant.A) ? "table-success" : "")">
                     <td>
                         <div class="d-flex align-items-center">
-                            @if (isVariantAWinner)
-                            {
-                                <i class="fa-solid fa-trophy text-warning me-2" aria-hidden="true"></i>
-                            }
                             <div>
-                                <strong>@T["Control"]</strong>
+                                <strong>@T["Control"]
+                                    @if (isVariantAWinner || (isConcluded && declaredWinner == ABVariant.A))
+                                    {
+                                        <span class="badge ta-badge font-weight-normal" title="@T["Winner"]"  data-bs-toggle="tooltip" title="@T["Impressions"]">
+                                            <i class="fa-solid fa-trophy text-success" aria-hidden="true"></i> Winner
+                                        </span>
+                                    }
+                                </strong>
                                 <br /><small class="text-muted">@Model.VariantAName</small>
                             </div>
                         </div>
@@ -139,16 +204,25 @@ else
                             <span class="text-muted">-</span>
                         }
                     </td>
+                    @if (canDeclareWinner)
+                    {
+                        <td class="text-end align-middle">
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="A" data-winner-name="@Model.VariantAName" data-loser-name="@Model.VariantBName">@T["Declare Winner"]</button>
+                        </td>
+                    }
                 </tr>
-                <tr class="@(isVariantBWinner ? "table-success" : "")">
+                <tr class="@(isVariantBWinner || (isConcluded && declaredWinner == ABVariant.B) ? "table-success" : "")">
                     <td>
                         <div class="d-flex align-items-center">
-                            @if (isVariantBWinner)
-                            {
-                                <i class="fa-solid fa-trophy text-warning me-2" aria-hidden="true"></i>
-                            }
                             <div>
-                                <strong>@T["Challenger"]</strong>
+                                <strong>@T["Challenger"]
+                                @if (isVariantBWinner || (isConcluded && declaredWinner == ABVariant.B))
+                                {
+                                     <span class="badge ta-badge font-weight-normal" title="@T["Winner"]"  data-bs-toggle="tooltip" title="@T["Impressions"]">
+                                        <i class="fa-solid fa-trophy text-success" aria-hidden="true"></i> Winner
+                                    </span>
+                                }
+                                </strong>
                                 <br /><small class="text-muted">@Model.VariantBName</small>
                             </div>
                         </div>
@@ -181,6 +255,12 @@ else
                             <span class="text-muted">-</span>
                         }
                     </td>
+                    @if (canDeclareWinner)
+                    {
+                        <td class="text-end align-middle">
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="B" data-winner-name="@Model.VariantBName" data-loser-name="@Model.VariantAName">@T["Declare Winner"]</button>
+                        </td>
+                    }
                 </tr>
             </tbody>
         </table>
@@ -195,4 +275,65 @@ else
             </small>
         </div>
     }
+}
+
+@if (canDeclareWinner)
+{
+    <!-- Declare Winner Modal -->
+    <div class="modal fade" id="declareWinnerModal" tabindex="-1" aria-labelledby="declareWinnerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="declareWinnerModalLabel">
+                        @T["Declare Winner"]
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@T["Close"]"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@T["Declaring a winner will:"]</p>
+                    <ul>
+                        <li>@T["Deactivate this A/B test"]</li>
+                        <li>@T["Unpublish the losing variant and rename it with \"[Variant – Not Selected]\" suffix"]</li>
+                        <li id="routeTransferNote" class="d-none">@T["Transfer the URL route from the loser to the winner"]</li>
+                    </ul>
+                    <p class="mb-0">
+                        @T["Are you sure you want to declare"] <strong id="winnerNameDisplay"></strong> @T["as the winner?"]
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <form asp-action="DeclareWinner" asp-route-testId="@Model.TestId" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="winner" id="winnerInput" value="" />
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T["Cancel"]</button>
+                        <button type="submit" class="btn btn-success">@T["Confirm & Declare Winner"]</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script at="Foot">
+        document.addEventListener('DOMContentLoaded', function() {
+            var modal = document.getElementById('declareWinnerModal');
+            if (modal) {
+                modal.addEventListener('show.bs.modal', function(event) {
+                    var button = event.relatedTarget;
+                    var winner = button.getAttribute('data-winner');
+                    var winnerName = button.getAttribute('data-winner-name');
+                    var loserName = button.getAttribute('data-loser-name');
+
+                    document.getElementById('winnerInput').value = winner;
+                    document.getElementById('winnerNameDisplay').textContent = winnerName;
+
+                    // Show route transfer note only if B is winning (route transfer from A to B)
+                    var routeNote = document.getElementById('routeTransferNote');
+                    if (winner === 'B') {
+                        routeNote.classList.remove('d-none');
+                    } else {
+                        routeNote.classList.add('d-none');
+                    }
+                });
+            }
+        });
+    </script>
 }

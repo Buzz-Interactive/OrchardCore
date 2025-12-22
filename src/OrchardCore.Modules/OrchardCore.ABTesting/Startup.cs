@@ -32,6 +32,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IABTestContentResolver, ABTestContentResolver>();
         services.AddSingleton<IStatisticalAnalysisService, StatisticalAnalysisService>();
         services.AddScoped<IBotDetectionService, BotDetectionService>();
+        services.AddScoped<IABTestWinnerService, ABTestWinnerService>();
 
         // Register content handler for variant deletion/unpublishing
         services.AddScoped<IContentHandler, ABTestContentHandler>();

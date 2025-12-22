@@ -42,4 +42,9 @@ public class ABTestIndex : MapIndex
     /// State of the Variant B content item.
     /// </summary>
     public VariantState VariantBState { get; set; }
+
+    /// <summary>
+    /// Whether the test has been concluded (winner declared).
+    /// </summary>
+    public bool IsConcluded { get; set; }
 }

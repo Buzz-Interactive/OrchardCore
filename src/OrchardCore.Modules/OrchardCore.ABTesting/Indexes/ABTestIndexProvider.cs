@@ -21,5 +21,6 @@ public class ABTestIndexProvider : IndexProvider<ABTest>
                 CreatedUtc = abTest.CreatedUtc,
                 VariantAState = abTest.VariantAState,
                 VariantBState = abTest.VariantBState,
+                IsConcluded = abTest.IsConcluded,
             });
 }

@@ -86,4 +86,15 @@ public sealed class Migrations : DataMigration
 
         return 2;
     }
+
+    public async Task<int> UpdateFrom2Async()
+    {
+        // Add IsConcluded column to track concluded tests (winner declared)
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .AddColumn<bool>("IsConcluded", col => col.WithDefault(false)),
+            collection: ABTest.Collection
+        );
+
+        return 3;
+    }
 }

@@ -123,4 +123,19 @@ public class ABTest : Entity
     /// When the test was last modified.
     /// </summary>
     public DateTime? ModifiedUtc { get; set; }
+
+    /// <summary>
+    /// The winning variant (A or B), null if test not concluded.
+    /// </summary>
+    public ABVariant? WinningVariant { get; set; }
+
+    /// <summary>
+    /// When the winner was declared.
+    /// </summary>
+    public DateTime? ConcludedUtc { get; set; }
+
+    /// <summary>
+    /// Whether the test has been concluded (winner declared).
+    /// </summary>
+    public bool IsConcluded { get; set; }
 }

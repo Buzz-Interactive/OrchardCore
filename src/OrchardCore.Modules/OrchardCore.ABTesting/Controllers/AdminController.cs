@@ -27,6 +27,7 @@ public class AdminController : Controller
     private readonly IContentManager _contentManager;
     private readonly ITrackingService _trackingService;
     private readonly IStatisticalAnalysisService _statisticalAnalysisService;
+    private readonly IABTestWinnerService _winnerService;
     private readonly IAuthorizationService _authorizationService;
     private readonly IShapeFactory _shapeFactory;
     private readonly INotifier _notifier;
@@ -40,6 +41,7 @@ public class AdminController : Controller
         IContentManager contentManager,
         ITrackingService trackingService,
         IStatisticalAnalysisService statisticalAnalysisService,
+        IABTestWinnerService winnerService,
         IAuthorizationService authorizationService,
         IShapeFactory shapeFactory,
         INotifier notifier,
@@ -52,6 +54,7 @@ public class AdminController : Controller
         _contentManager = contentManager;
         _trackingService = trackingService;
         _statisticalAnalysisService = statisticalAnalysisService;
+        _winnerService = winnerService;
         _authorizationService = authorizationService;
         _shapeFactory = shapeFactory;
         _notifier = notifier;
@@ -465,6 +468,9 @@ public class AdminController : Controller
             TargetPercentageA: test.PercentageA,
             TargetPercentageB: 100 - test.PercentageA,
             IsActive: test.IsActive,
+            IsConcluded: test.IsConcluded,
+            WinningVariant: test.WinningVariant,
+            ConcludedUtc: test.ConcludedUtc,
             VariantAName: variantAName,
             VariantAContentItemId: test.VariantAContentItemId,
             VariantAImpressions: variantAImpressions,
@@ -485,6 +491,32 @@ public class AdminController : Controller
         );
 
         return View(shape);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeclareWinner(string testId, ABVariant winner)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var success = await _winnerService.DeclareWinnerAsync(testId, winner);
+            if (success)
+            {
+                var winnerLabel = winner == ABVariant.A ? "Control (A)" : "Challenger (B)";
+                await _notifier.SuccessAsync(H["Winner declared: {0}. The test has been concluded.", winnerLabel]);
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            await _notifier.ErrorAsync(H[ex.Message]);
+        }
+
+        return RedirectToAction(nameof(Results), new { testId });
     }
 
     [HttpGet]
