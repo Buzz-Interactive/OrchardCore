@@ -40,6 +40,10 @@ public sealed class ABTestingSiteSettingsDisplayDriver : SiteDisplayDriver<ABTes
         {
             model.DisplayAllContentTypes = settings.DisplayAllContentTypes;
             model.AllowedContentTypes = settings.AllowedContentTypes ?? [];
+            model.EnableBotDetection = settings.EnableBotDetection;
+            model.BotUserAgentPatternsText = settings.BotUserAgentPatterns != null
+                ? string.Join("\n", settings.BotUserAgentPatterns)
+                : string.Join("\n", ABTestingSettings.DefaultBotPatterns);
         }).Location("Content:3")
         .OnGroup(SettingsGroupId);
     }
@@ -57,11 +61,30 @@ public sealed class ABTestingSiteSettingsDisplayDriver : SiteDisplayDriver<ABTes
 
         await context.Updater.TryUpdateModelAsync(model, Prefix,
             m => m.DisplayAllContentTypes,
-            m => m.AllowedContentTypes);
+            m => m.AllowedContentTypes,
+            m => m.EnableBotDetection,
+            m => m.BotUserAgentPatternsText);
 
         settings.DisplayAllContentTypes = model.DisplayAllContentTypes;
         settings.AllowedContentTypes = model.AllowedContentTypes ?? [];
+        settings.EnableBotDetection = model.EnableBotDetection;
+        settings.BotUserAgentPatterns = ParsePatterns(model.BotUserAgentPatternsText);
 
         return await EditAsync(site, settings, context);
+    }
+
+    private static string[] ParsePatterns(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return ABTestingSettings.DefaultBotPatterns;
+        }
+
+        return text
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim())
+            .Where(p => !string.IsNullOrEmpty(p))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 }

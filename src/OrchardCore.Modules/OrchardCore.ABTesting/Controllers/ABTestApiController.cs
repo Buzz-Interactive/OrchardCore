@@ -18,15 +18,18 @@ public class ABTestApiController : ControllerBase
     private readonly IImpressionService _impressionService;
     private readonly IGoalService _goalService;
     private readonly IABTestLookupService _lookupService;
+    private readonly IBotDetectionService _botDetectionService;
 
     public ABTestApiController(
         IImpressionService impressionService,
         IGoalService goalService,
-        IABTestLookupService lookupService)
+        IABTestLookupService lookupService,
+        IBotDetectionService botDetectionService)
     {
         _impressionService = impressionService;
         _goalService = goalService;
         _lookupService = lookupService;
+        _botDetectionService = botDetectionService;
     }
 
     /// <summary>
@@ -41,6 +44,13 @@ public class ABTestApiController : ControllerBase
         if (model == null || string.IsNullOrEmpty(model.TestId) || string.IsNullOrEmpty(model.Variant))
         {
             return BadRequest();
+        }
+
+        // Skip tracking for bot traffic
+        var userAgent = Request.Headers.UserAgent.ToString();
+        if (_botDetectionService.IsBot(userAgent))
+        {
+            return Ok();
         }
 
         // Validate the test exists and is active
@@ -74,6 +84,13 @@ public class ABTestApiController : ControllerBase
         if (model == null || string.IsNullOrEmpty(model.TestId) || string.IsNullOrEmpty(model.Variant))
         {
             return BadRequest();
+        }
+
+        // Skip tracking for bot traffic
+        var userAgent = Request.Headers.UserAgent.ToString();
+        if (_botDetectionService.IsBot(userAgent))
+        {
+            return Ok();
         }
 
         // Validate the test exists

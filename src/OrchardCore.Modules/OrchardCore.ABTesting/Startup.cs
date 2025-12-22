@@ -30,6 +30,7 @@ public sealed class Startup : StartupBase
         services.AddScoped<IVisitorAssignmentService, VisitorAssignmentService>();
         services.AddScoped<IABTestContentResolver, ABTestContentResolver>();
         services.AddSingleton<IStatisticalAnalysisService, StatisticalAnalysisService>();
+        services.AddScoped<IBotDetectionService, BotDetectionService>();
 
         // Register the tracking filter
         services.Configure<MvcOptions>(options =>

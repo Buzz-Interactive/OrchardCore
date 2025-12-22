@@ -17,12 +17,30 @@
     })
 </div>
 
+<h5>@T["Bot Detection"]</h5>
+
+<div class="mb-3">
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" asp-for="EnableBotDetection" id="EnableBotDetection">
+        <label class="form-check-label" asp-for="EnableBotDetection">@T["Enable bot detection"]</label>
+    </div>
+    <span class="hint">@T["When enabled, traffic from detected bots will not be recorded as impressions or conversions."]</span>
+</div>
+
+<div class="mb-3" id="BotPatternsContainer">
+    <label class="form-label" asp-for="BotUserAgentPatternsText">@T["Bot User-Agent Patterns"]</label>
+    <span class="hint d-block mb-2">@T["Enter one pattern per line. Patterns are matched case-insensitively against the User-Agent header."]</span>
+    <textarea class="form-control font-monospace" asp-for="BotUserAgentPatternsText" rows="12"
+              placeholder="@T["Enter bot patterns, one per line..."]"></textarea>
+    <span class="hint">@T["Common patterns include: Googlebot, bingbot, spider, crawler, bot, etc."]</span>
+</div>
+
 <script at="Foot">
     document.addEventListener('DOMContentLoaded', function() {
         var displayAllCheckbox = document.getElementById('DisplayAllContentTypes');
         var contentTypesContainer = document.getElementById('ContentTypesContainer');
 
-        function updateVisibility() {
+        function updateContentTypesVisibility() {
             if (displayAllCheckbox.checked) {
                 contentTypesContainer.classList.add('d-none');
             } else {
@@ -30,7 +48,21 @@
             }
         }
 
-        displayAllCheckbox.addEventListener('change', updateVisibility);
-        updateVisibility();
+        displayAllCheckbox.addEventListener('change', updateContentTypesVisibility);
+        updateContentTypesVisibility();
+
+        var enableBotDetection = document.getElementById('EnableBotDetection');
+        var botPatternsContainer = document.getElementById('BotPatternsContainer');
+
+        function updateBotPatternsVisibility() {
+            if (enableBotDetection.checked) {
+                botPatternsContainer.classList.remove('d-none');
+            } else {
+                botPatternsContainer.classList.add('d-none');
+            }
+        }
+
+        enableBotDetection.addEventListener('change', updateBotPatternsVisibility);
+        updateBotPatternsVisibility();
     });
 </script>
