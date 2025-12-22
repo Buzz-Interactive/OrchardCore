@@ -1,7 +1,6 @@
 using System.Data.Common;
 using Dapper;
 using OrchardCore.ABTesting.Models;
-using OrchardCore.ABTesting.Records;
 using OrchardCore.Data;
 using YesSql;
 

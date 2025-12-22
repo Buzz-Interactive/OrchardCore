@@ -1,4 +1,4 @@
-namespace OrchardCore.ABTesting.Records;
+namespace OrchardCore.ABTesting.Models;
 
 /// <summary>
 /// Database record for storing A/B test impression counts.
