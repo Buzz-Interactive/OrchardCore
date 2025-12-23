@@ -1,0 +1,18 @@
+@using OrchardCore.ABTesting.Workflows.ViewModels
+@model DeclareABTestWinnerTaskViewModel
+
+<div class="mb-3">
+    <label asp-for="TestIdExpression" class="form-label">@T["Test ID Expression"]</label>
+    <input type="text" asp-for="TestIdExpression" class="form-control code" />
+    <span class="hint">@T["Enter a JavaScript expression that evaluates to the A/B Test ID. For example: input(\"TestId\"). If no expression is specified, the workflow's \"TestId\" input will be used."]</span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Winner" class="form-label">@T["Winner"]</label>
+    <select asp-for="Winner" class="form-select">
+        <option value="Auto">@T["Auto (use detected winner from workflow input)"]</option>
+        <option value="A">@T["Variant A"]</option>
+        <option value="B">@T["Variant B"]</option>
+    </select>
+    <span class="hint">@T["Select which variant to declare as the winner. 'Auto' uses the WinningVariant from the workflow context, which is set by the A/B Test Winner Detected event."]</span>
+</div>

@@ -1,0 +1,25 @@
+@using OrchardCore.ABTesting.Workflows.ViewModels
+@using OrchardCore.Workflows.Helpers
+@using OrchardCore.Workflows.ViewModels
+@model DeclareABTestWinnerTaskViewModel
+
+<header>
+    <h4><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>@Model.Activity.GetTitleOrDefault(() => T["Declare A/B Test Winner"])</h4>
+</header>
+@{
+    var winnerDisplay = Model.Activity.Winner?.ToUpperInvariant() switch
+    {
+        "A" => T["Variant A"].Value,
+        "B" => T["Variant B"].Value,
+        _ => T["Auto (detected winner)"].Value
+    };
+}
+@if (!string.IsNullOrWhiteSpace(Model.Activity.TestId?.Expression))
+{
+    <span>@T["Test: <em>{0}</em>", Model.Activity.TestId.Expression]</span>
+}
+else
+{
+    <span>@T["Test from input"]</span>
+}
+<span> @T["Winner: <em>{0}</em>", winnerDisplay]</span>

@@ -132,7 +132,11 @@ public class AdminController : Controller
             return Forbid();
         }
 
-        var viewModel = new ABTestViewModel();
+        var settings = await _siteService.GetSettingsAsync<ABTestingSettings>();
+        var viewModel = new ABTestViewModel
+        {
+            MinimumSampleSizeLimit = settings.MinimumSampleSizeLimit,
+        };
         return View(viewModel);
     }
 
@@ -145,8 +149,19 @@ public class AdminController : Controller
             return Forbid();
         }
 
+        var settings = await _siteService.GetSettingsAsync<ABTestingSettings>();
+        viewModel.MinimumSampleSizeLimit = settings.MinimumSampleSizeLimit;
+
         if (!ModelState.IsValid)
         {
+            return View(viewModel);
+        }
+
+        // Validate minimum sample size against site settings
+        if (viewModel.MinimumSampleSize < settings.MinimumSampleSizeLimit)
+        {
+            ModelState.AddModelError(nameof(viewModel.MinimumSampleSize),
+                $"Minimum sample size must be at least {settings.MinimumSampleSizeLimit}.");
             return View(viewModel);
         }
 
@@ -224,6 +239,7 @@ public class AdminController : Controller
         var (impressionsA, impressionsB) = await _trackingService.GetImpressionsAsync(testId);
         var (conversionsA, conversionsB) = await _trackingService.GetConversionsAsync(testId);
         var totalImpressions = impressionsA + impressionsB;
+        var settings = await _siteService.GetSettingsAsync<ABTestingSettings>();
 
         var viewModel = new ABTestViewModel
         {
@@ -242,6 +258,7 @@ public class AdminController : Controller
             GoalEventName = test.GoalEventName,
             GoalTimeOnPageSeconds = test.GoalTimeOnPageSeconds,
             MinimumSampleSize = test.MinimumSampleSize,
+            MinimumSampleSizeLimit = settings.MinimumSampleSizeLimit,
             ConfidenceThreshold = test.ConfidenceThreshold,
             IsActive = test.IsActive,
             TotalImpressions = totalImpressions,
@@ -269,6 +286,9 @@ public class AdminController : Controller
             return NotFound();
         }
 
+        var settings = await _siteService.GetSettingsAsync<ABTestingSettings>();
+        viewModel.MinimumSampleSizeLimit = settings.MinimumSampleSizeLimit;
+
         // If any variant has been deleted, block edits
         var hasDeletedVariant = test.VariantAState == VariantState.Deleted ||
                                 test.VariantBState == VariantState.Deleted;
@@ -280,6 +300,15 @@ public class AdminController : Controller
 
         if (!ModelState.IsValid)
         {
+            await PopulateViewModelDisplayData(viewModel);
+            return View(viewModel);
+        }
+
+        // Validate minimum sample size against site settings
+        if (viewModel.MinimumSampleSize < settings.MinimumSampleSizeLimit)
+        {
+            ModelState.AddModelError(nameof(viewModel.MinimumSampleSize),
+                $"Minimum sample size must be at least {settings.MinimumSampleSizeLimit}.");
             await PopulateViewModelDisplayData(viewModel);
             return View(viewModel);
         }

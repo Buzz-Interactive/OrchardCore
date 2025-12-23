@@ -100,8 +100,15 @@ public class ABTestViewModel
     /// <summary>
     /// Minimum number of impressions required per variant before statistical analysis is performed.
     /// </summary>
-    [Range(30, 500, ErrorMessage = "Minimum sample size must be between 30 and 500.")]
+    [Range(10, 500, ErrorMessage = "Minimum sample size must be between 10 and 500.")]
     public int MinimumSampleSize { get; set; } = 50;
+
+    /// <summary>
+    /// The minimum allowed value for sample size (from site settings).
+    /// Used for client-side validation.
+    /// </summary>
+    [BindNever]
+    public int MinimumSampleSizeLimit { get; set; } = 30;
 
     /// <summary>
     /// The confidence level required to declare a winner (90, 95, or 99).

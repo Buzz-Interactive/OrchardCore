@@ -40,6 +40,7 @@ public sealed class ABTestingSiteSettingsDisplayDriver : SiteDisplayDriver<ABTes
         {
             model.DisplayAllContentTypes = settings.DisplayAllContentTypes;
             model.AllowedContentTypes = settings.AllowedContentTypes ?? [];
+            model.MinimumSampleSizeLimit = settings.MinimumSampleSizeLimit;
             model.EnableBotDetection = settings.EnableBotDetection;
             model.BotUserAgentPatternsText = settings.BotUserAgentPatterns != null
                 ? string.Join("\n", settings.BotUserAgentPatterns)
@@ -62,11 +63,13 @@ public sealed class ABTestingSiteSettingsDisplayDriver : SiteDisplayDriver<ABTes
         await context.Updater.TryUpdateModelAsync(model, Prefix,
             m => m.DisplayAllContentTypes,
             m => m.AllowedContentTypes,
+            m => m.MinimumSampleSizeLimit,
             m => m.EnableBotDetection,
             m => m.BotUserAgentPatternsText);
 
         settings.DisplayAllContentTypes = model.DisplayAllContentTypes;
         settings.AllowedContentTypes = model.AllowedContentTypes ?? [];
+        settings.MinimumSampleSizeLimit = Math.Clamp(model.MinimumSampleSizeLimit, 10, 100);
         settings.EnableBotDetection = model.EnableBotDetection;
         settings.BotUserAgentPatterns = ParsePatterns(model.BotUserAgentPatternsText);
 

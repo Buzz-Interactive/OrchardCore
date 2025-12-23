@@ -18,6 +18,13 @@ public class ABTestingSettings
     public string[] AllowedContentTypes { get; set; } = [];
 
     /// <summary>
+    /// The minimum allowed value for sample size per variant that tests can be configured with.
+    /// This sets the lower bound for the MinimumSampleSize setting on individual tests.
+    /// Default is 30. Valid range is 10-100.
+    /// </summary>
+    public int MinimumSampleSizeLimit { get; set; } = 30;
+
+    /// <summary>
     /// When true, bot detection is enabled and bot traffic will be excluded from A/B test tracking.
     /// </summary>
     public bool EnableBotDetection { get; set; } = true;

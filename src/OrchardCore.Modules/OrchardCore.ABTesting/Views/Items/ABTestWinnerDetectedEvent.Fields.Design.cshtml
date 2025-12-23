@@ -1,0 +1,9 @@
+@using OrchardCore.ABTesting.Workflows.ViewModels
+@using OrchardCore.Workflows.Helpers
+@using OrchardCore.Workflows.ViewModels
+@model ABTestWinnerDetectedEventViewModel
+
+<header>
+    <h4><i class="fa-solid fa-trophy" aria-hidden="true"></i>@Model.Activity.GetTitleOrDefault(() => T["A/B Test Winner Detected"])</h4>
+</header>
+<span>@T["When any A/B test reaches significance"]</span>

@@ -1,0 +1,9 @@
+@using OrchardCore.ABTesting.Workflows.ViewModels
+@model ABTestWinnerDetectedEventViewModel
+
+<p class="text-muted">
+    @T["This event triggers when any A/B test reaches statistical significance at the confidence level configured for that test."]
+</p>
+<p class="text-muted">
+    @T["The workflow will receive the test details including TestId, TestName, WinningVariant, ConfidenceLevel, and conversion statistics."]
+</p>

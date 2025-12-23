@@ -17,6 +17,14 @@
     })
 </div>
 
+<h5>@T["Statistical Analysis"]</h5>
+
+<div class="mb-3">
+    <label class="form-label" asp-for="MinimumSampleSizeLimit">@T["Minimum Sample Size Limit"]</label>
+    <input type="number" class="form-control" asp-for="MinimumSampleSizeLimit" min="10" max="100" style="max-width: 150px;" />
+    <span class="hint">@T["The minimum number of impressions per variant that can be configured for tests. Lower values allow faster results but less statistical reliability. (Range: 10-100, Default: 30)"]</span>
+</div>
+
 <h5>@T["Bot Detection"]</h5>
 
 <div class="mb-3">

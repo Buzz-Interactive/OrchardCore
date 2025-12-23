@@ -1,13 +1,14 @@
 @{
     int minimumSampleSize = Model.MinimumSampleSize;
+    int minimumSampleSizeLimit = Model.MinimumSampleSizeLimit;
     int confidenceThreshold = Model.ConfidenceThreshold;
 }
 
 <div class="mb-3">
     <label for="MinimumSampleSize" class="form-label">@T["Minimum Sample Size"]</label>
-    <input type="number" min="30" max="500" class="form-control" style="max-width: 200px;" id="MinimumSampleSize" name="MinimumSampleSize" value="@minimumSampleSize" />
+    <input type="number" min="@minimumSampleSizeLimit" max="500" class="form-control" style="max-width: 200px;" id="MinimumSampleSize" name="MinimumSampleSize" value="@minimumSampleSize" />
     <span class="text-danger field-validation-valid" data-valmsg-for="MinimumSampleSize" data-valmsg-replace="true"></span>
-    <div class="form-text">@T["Minimum impressions per variant required before statistical analysis. Lower values give faster results but less reliable statistics. (Range: 30-500, Default: 50)"]</div>
+    <div class="form-text">@T["Minimum impressions per variant required before statistical analysis. Lower values give faster results but less reliable statistics. (Range: {0}-500, Default: 50)", minimumSampleSizeLimit]</div>
 </div>
 
 <div class="mb-3">
