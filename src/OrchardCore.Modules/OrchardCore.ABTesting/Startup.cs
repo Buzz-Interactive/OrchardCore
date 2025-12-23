@@ -33,6 +33,7 @@ public sealed class Startup : StartupBase
         services.AddSingleton<IStatisticalAnalysisService, StatisticalAnalysisService>();
         services.AddScoped<IBotDetectionService, BotDetectionService>();
         services.AddScoped<IABTestWinnerService, ABTestWinnerService>();
+        services.AddScoped<IABTestRedirectService, ABTestRedirectService>();
 
         // Register content handler for variant deletion/unpublishing
         services.AddScoped<IContentHandler, ABTestContentHandler>();
@@ -62,6 +63,9 @@ public sealed class Startup : StartupBase
 
     public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
     {
+        // Register the A/B test redirect middleware (redirects Variant B URLs to Variant A during active tests)
+        app.UseABTestRedirects();
+
         // Register the A/B testing middleware
         // This must be called after UseRouting() to have access to route data
         app.UseABTesting();

@@ -97,4 +97,24 @@ public sealed class Migrations : DataMigration
 
         return 3;
     }
+
+    public async Task<int> UpdateFrom3Async()
+    {
+        // Add path column for redirect functionality during active tests
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .AddColumn<string>("VariantBOriginalPath", col => col.WithLength(1024)),
+            collection: ABTest.Collection
+        );
+
+        // Create index for path-based lookup (for redirect middleware)
+        await SchemaBuilder.AlterIndexTableAsync<ABTestIndex>(table => table
+            .CreateIndex("IDX_ABTestIndex_VariantBPath",
+                "DocumentId",
+                "VariantBOriginalPath",
+                "IsActive"),
+            collection: ABTest.Collection
+        );
+
+        return 4;
+    }
 }

@@ -1,6 +1,7 @@
 using OrchardCore.ABTesting.Indexes;
 using OrchardCore.ABTesting.Models;
 using OrchardCore.ContentManagement;
+using OrchardCore.ContentManagement.Routing;
 using YesSql;
 using IIdGenerator = OrchardCore.Entities.IIdGenerator;
 
@@ -14,15 +15,18 @@ public class ABTestManager : IABTestManager
     private readonly ISession _session;
     private readonly IIdGenerator _idGenerator;
     private readonly IContentManager _contentManager;
+    private readonly IAutorouteEntries _autorouteEntries;
 
     public ABTestManager(
         ISession session,
         IIdGenerator idGenerator,
-        IContentManager contentManager)
+        IContentManager contentManager,
+        IAutorouteEntries autorouteEntries)
     {
         _session = session;
         _idGenerator = idGenerator;
         _contentManager = contentManager;
+        _autorouteEntries = autorouteEntries;
     }
 
     /// <inheritdoc />
@@ -209,6 +213,13 @@ public class ABTestManager : IABTestManager
             var conflictingNames = string.Join(", ", conflictingTests.Select(t => t.Name ?? t.TestId));
             throw new InvalidOperationException(
                 $"Cannot activate test: one or both variants are already used in active test(s): {conflictingNames}");
+        }
+
+        // Capture Variant B's original path for redirect purposes
+        var (found, entry) = await _autorouteEntries.TryGetEntryByContentItemIdAsync(test.VariantBContentItemId);
+        if (found && !string.IsNullOrEmpty(entry.Path))
+        {
+            test.VariantBOriginalPath = entry.Path.TrimStart('/');
         }
 
         test.IsActive = true;

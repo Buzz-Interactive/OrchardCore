@@ -138,4 +138,10 @@ public class ABTest : Entity
     /// Whether the test has been concluded (winner declared).
     /// </summary>
     public bool IsConcluded { get; set; }
+
+    /// <summary>
+    /// The original URL path of Variant B when the test was activated.
+    /// Used for redirecting direct visits back to Variant A during active tests.
+    /// </summary>
+    public string VariantBOriginalPath { get; set; }
 }

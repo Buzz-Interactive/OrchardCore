@@ -22,5 +22,6 @@ public class ABTestIndexProvider : IndexProvider<ABTest>
                 VariantAState = abTest.VariantAState,
                 VariantBState = abTest.VariantBState,
                 IsConcluded = abTest.IsConcluded,
+                VariantBOriginalPath = abTest.VariantBOriginalPath,
             });
 }

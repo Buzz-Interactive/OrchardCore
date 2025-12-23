@@ -47,4 +47,9 @@ public class ABTestIndex : MapIndex
     /// Whether the test has been concluded (winner declared).
     /// </summary>
     public bool IsConcluded { get; set; }
+
+    /// <summary>
+    /// The original URL path of Variant B (for active test redirects).
+    /// </summary>
+    public string VariantBOriginalPath { get; set; }
 }
