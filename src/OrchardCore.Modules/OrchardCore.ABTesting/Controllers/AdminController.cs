@@ -14,6 +14,7 @@ using OrchardCore.ContentManagement.Records;
 using OrchardCore.Contents;
 using OrchardCore.DisplayManagement;
 using OrchardCore.DisplayManagement.Notify;
+using OrchardCore.Routing;
 using OrchardCore.Settings;
 using YesSql;
 using YesSql.Services;
@@ -141,8 +142,24 @@ public class AdminController : Controller
     }
 
     [HttpPost]
+    [ActionName(nameof(Create))]
+    [FormValueRequired("submit.Create")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ABTestViewModel viewModel)
+    public async Task<IActionResult> CreatePOST(ABTestViewModel viewModel)
+    {
+        return await CreateTestAsync(viewModel, activate: false);
+    }
+
+    [HttpPost]
+    [ActionName(nameof(Create))]
+    [FormValueRequired("submit.CreateAndActivate")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateAndActivatePOST(ABTestViewModel viewModel)
+    {
+        return await CreateTestAsync(viewModel, activate: true);
+    }
+
+    private async Task<IActionResult> CreateTestAsync(ABTestViewModel viewModel, bool activate)
     {
         if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
         {
@@ -154,7 +171,7 @@ public class AdminController : Controller
 
         if (!ModelState.IsValid)
         {
-            return View(viewModel);
+            return View(nameof(Create), viewModel);
         }
 
         // Validate minimum sample size against site settings
@@ -162,33 +179,36 @@ public class AdminController : Controller
         {
             ModelState.AddModelError(nameof(viewModel.MinimumSampleSize),
                 $"Minimum sample size must be at least {settings.MinimumSampleSizeLimit}.");
-            return View(viewModel);
+            return View(nameof(Create), viewModel);
         }
 
         // Validate variants are different
         if (viewModel.VariantAContentItemId == viewModel.VariantBContentItemId)
         {
             ModelState.AddModelError(nameof(viewModel.VariantBContentItemId), "Variant A and Variant B must be different.");
-            return View(viewModel);
+            return View(nameof(Create), viewModel);
         }
 
         // Validate goal configuration
         if (!ValidateGoalConfiguration(viewModel))
         {
-            return View(viewModel);
+            return View(nameof(Create), viewModel);
         }
 
-        // Validate variants are not in active tests
-        var conflictingTests = await _abTestManager.GetActiveTestsWithConflictingVariantsAsync(
-            viewModel.VariantAContentItemId,
-            viewModel.VariantBContentItemId);
-
-        if (conflictingTests.Any())
+        // Validate variants are not in active tests (only if activating)
+        if (activate)
         {
-            var conflictingNames = string.Join(", ", conflictingTests.Select(t => t.Name ?? t.TestId));
-            ModelState.AddModelError(string.Empty,
-                $"One or both variants are already used in active test(s): {conflictingNames}");
-            return View(viewModel);
+            var conflictingTests = await _abTestManager.GetActiveTestsWithConflictingVariantsAsync(
+                viewModel.VariantAContentItemId,
+                viewModel.VariantBContentItemId);
+
+            if (conflictingTests.Any())
+            {
+                var conflictingNames = string.Join(", ", conflictingTests.Select(t => t.Name ?? t.TestId));
+                ModelState.AddModelError(string.Empty,
+                    $"One or both variants are already used in active test(s): {conflictingNames}");
+                return View(nameof(Create), viewModel);
+            }
         }
 
         var test = new ABTest
@@ -208,7 +228,22 @@ public class AdminController : Controller
 
         await _abTestManager.CreateAsync(test);
 
-        await _notifier.SuccessAsync(H["A/B Test created successfully."]);
+        if (activate)
+        {
+            try
+            {
+                await _abTestManager.ActivateAsync(test.TestId);
+                await _notifier.SuccessAsync(H["A/B Test created and activated successfully."]);
+            }
+            catch (InvalidOperationException ex)
+            {
+                await _notifier.WarningAsync(H["A/B Test created but could not be activated: {0}", ex.Message]);
+            }
+        }
+        else
+        {
+            await _notifier.SuccessAsync(H["A/B Test created successfully."]);
+        }
 
         return RedirectToAction(nameof(Index));
     }
@@ -271,8 +306,48 @@ public class AdminController : Controller
     }
 
     [HttpPost]
+    [ActionName(nameof(Edit))]
+    [FormValueRequired("submit.Save")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(string testId, ABTestViewModel viewModel)
+    public async Task<IActionResult> EditPOST(string testId, ABTestViewModel viewModel)
+    {
+        return await SaveTestAsync(testId, viewModel, activate: false);
+    }
+
+    [HttpPost]
+    [ActionName(nameof(Edit))]
+    [FormValueRequired("submit.SaveAndActivate")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditAndActivatePOST(string testId, ABTestViewModel viewModel)
+    {
+        return await SaveTestAsync(testId, viewModel, activate: true);
+    }
+
+    [HttpPost]
+    [ActionName(nameof(Edit))]
+    [FormValueRequired("submit.Deactivate")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditAndDeactivatePOST(string testId)
+    {
+        if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            await _abTestManager.DeactivateAsync(testId);
+            await _notifier.SuccessAsync(H["A/B Test deactivated successfully."]);
+        }
+        catch (InvalidOperationException ex)
+        {
+            await _notifier.ErrorAsync(H[ex.Message]);
+        }
+
+        return RedirectToAction(nameof(Edit), new { testId });
+    }
+
+    private async Task<IActionResult> SaveTestAsync(string testId, ABTestViewModel viewModel, bool activate)
     {
         if (!await _authorizationService.AuthorizeAsync(User, Permissions.ManageABTests))
         {
@@ -301,7 +376,7 @@ public class AdminController : Controller
         if (!ModelState.IsValid)
         {
             await PopulateViewModelDisplayData(viewModel);
-            return View(viewModel);
+            return View(nameof(Edit), viewModel);
         }
 
         // Validate minimum sample size against site settings
@@ -310,7 +385,7 @@ public class AdminController : Controller
             ModelState.AddModelError(nameof(viewModel.MinimumSampleSize),
                 $"Minimum sample size must be at least {settings.MinimumSampleSizeLimit}.");
             await PopulateViewModelDisplayData(viewModel);
-            return View(viewModel);
+            return View(nameof(Edit), viewModel);
         }
 
         // Validate variants are different
@@ -318,7 +393,7 @@ public class AdminController : Controller
         {
             ModelState.AddModelError(nameof(viewModel.VariantBContentItemId), "Variant A and Variant B must be different.");
             await PopulateViewModelDisplayData(viewModel);
-            return View(viewModel);
+            return View(nameof(Edit), viewModel);
         }
 
         // Check if goals are locked
@@ -330,22 +405,25 @@ public class AdminController : Controller
         if (!areGoalsLocked && !ValidateGoalConfiguration(viewModel))
         {
             await PopulateViewModelDisplayData(viewModel);
-            return View(viewModel);
+            return View(nameof(Edit), viewModel);
         }
 
-        // Validate variants are not in other active tests (exclude current test)
-        var conflictingTests = await _abTestManager.GetActiveTestsWithConflictingVariantsAsync(
-            viewModel.VariantAContentItemId,
-            viewModel.VariantBContentItemId,
-            testId);
-
-        if (conflictingTests.Any())
+        // Validate variants are not in other active tests (exclude current test) - only if activating
+        if (activate)
         {
-            var conflictingNames = string.Join(", ", conflictingTests.Select(t => t.Name ?? t.TestId));
-            ModelState.AddModelError(string.Empty,
-                $"One or both variants are already used in active test(s): {conflictingNames}");
-            await PopulateViewModelDisplayData(viewModel);
-            return View(viewModel);
+            var conflictingTests = await _abTestManager.GetActiveTestsWithConflictingVariantsAsync(
+                viewModel.VariantAContentItemId,
+                viewModel.VariantBContentItemId,
+                testId);
+
+            if (conflictingTests.Any())
+            {
+                var conflictingNames = string.Join(", ", conflictingTests.Select(t => t.Name ?? t.TestId));
+                ModelState.AddModelError(string.Empty,
+                    $"One or both variants are already used in active test(s): {conflictingNames}");
+                await PopulateViewModelDisplayData(viewModel);
+                return View(nameof(Edit), viewModel);
+            }
         }
 
         // Update the test
@@ -368,7 +446,22 @@ public class AdminController : Controller
 
         await _abTestManager.UpdateAsync(test);
 
-        await _notifier.SuccessAsync(H["A/B Test updated successfully."]);
+        if (activate)
+        {
+            try
+            {
+                await _abTestManager.ActivateAsync(testId);
+                await _notifier.SuccessAsync(H["A/B Test saved and activated successfully."]);
+            }
+            catch (InvalidOperationException ex)
+            {
+                await _notifier.WarningAsync(H["A/B Test saved but could not be activated: {0}", ex.Message]);
+            }
+        }
+        else
+        {
+            await _notifier.SuccessAsync(H["A/B Test updated successfully."]);
+        }
 
         return RedirectToAction(nameof(Index));
     }

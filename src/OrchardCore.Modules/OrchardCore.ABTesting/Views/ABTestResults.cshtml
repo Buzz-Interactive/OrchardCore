@@ -12,6 +12,7 @@
 
     // Check if we can show declare winner buttons
     bool canDeclareWinner = !isConcluded && Model.TotalImpressions > 0;
+    bool hasSufficientData = statistics?.HasSufficientData ?? false;
 }
 
 @if (isConcluded)
@@ -121,9 +122,20 @@ else if (!hasGoal)
                     @if (canDeclareWinner)
                     {
                         <td class="text-end align-middle">
-                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="A" data-winner-name="@Model.VariantAName" data-loser-name="@Model.VariantBName">
-                                <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Declare Winner"]
-                            </button>
+                            @if (!hasSufficientData)
+                            {
+                                <span data-bs-toggle="tooltip" title="@T["Minimum sample size not reached"]">
+                                    <button type="button" class="btn btn-sm btn-outline-success" disabled>
+                                        <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Declare Winner"]
+                                    </button>
+                                </span>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="A" data-winner-name="@Model.VariantAName" data-loser-name="@Model.VariantBName">
+                                    <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Declare Winner"]
+                                </button>
+                            }
                         </td>
                     }
                 </tr>
@@ -145,9 +157,20 @@ else if (!hasGoal)
                     @if (canDeclareWinner)
                     {
                         <td class="text-end align-middle">
-                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="B" data-winner-name="@Model.VariantBName" data-loser-name="@Model.VariantAName">
-                                <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Declare Winner"]
-                            </button>
+                            @if (!hasSufficientData)
+                            {
+                                <span data-bs-toggle="tooltip" title="@T["Minimum sample size not reached"]">
+                                    <button type="button" class="btn btn-sm btn-outline-success" disabled>
+                                        <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Declare Winner"]
+                                    </button>
+                                </span>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="B" data-winner-name="@Model.VariantBName" data-loser-name="@Model.VariantAName">
+                                    <i class="fa-solid fa-trophy me-1" aria-hidden="true"></i>@T["Declare Winner"]
+                                </button>
+                            }
                         </td>
                     }
                 </tr>
@@ -207,7 +230,16 @@ else
                     @if (canDeclareWinner)
                     {
                         <td class="text-end align-middle">
-                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="A" data-winner-name="@Model.VariantAName" data-loser-name="@Model.VariantBName">@T["Declare Winner"]</button>
+                            @if (!hasSufficientData)
+                            {
+                                <span data-bs-toggle="tooltip" title="@T["Minimum sample size not reached"]">
+                                    <button type="button" class="btn btn-sm btn-success" disabled><i class="fa-solid fa-trophy" aria-hidden="true"></i> @T["Declare Winner"]</button>
+                                </span>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="A" data-winner-name="@Model.VariantAName" data-loser-name="@Model.VariantBName"><i class="fa-solid fa-trophy" aria-hidden="true"></i> @T["Declare Winner"]</button>
+                            }
                         </td>
                     }
                 </tr>
@@ -258,7 +290,16 @@ else
                     @if (canDeclareWinner)
                     {
                         <td class="text-end align-middle">
-                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="B" data-winner-name="@Model.VariantBName" data-loser-name="@Model.VariantAName">@T["Declare Winner"]</button>
+                            @if (!hasSufficientData)
+                            {
+                                <span data-bs-toggle="tooltip" title="@T["Minimum sample size not reached"]">
+                                    <button type="button" class="btn btn-sm btn-success" disabled><i class="fa-solid fa-trophy" aria-hidden="true"></i> @T["Declare Winner"]</button>
+                                </span>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#declareWinnerModal" data-winner="B" data-winner-name="@Model.VariantBName" data-loser-name="@Model.VariantAName"><i class="fa-solid fa-trophy" aria-hidden="true"></i> @T["Declare Winner"]</button>
+                            }
                         </td>
                     }
                 </tr>
