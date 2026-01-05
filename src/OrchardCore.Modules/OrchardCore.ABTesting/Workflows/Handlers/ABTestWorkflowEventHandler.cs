@@ -89,4 +89,26 @@ public class ABTestWorkflowEventHandler : IABTestWorkflowEventHandler
             _session.Delete(triggeredRecord, ABTestWinnerTriggeredRecord.Collection);
         }
     }
+
+    /// <inheritdoc />
+    public async Task TriggerWinnerDeclaredAsync(ABTestWinnerDeclaredContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var input = new Dictionary<string, object>
+        {
+            ["TestId"] = context.TestId,
+            ["TestName"] = context.TestName,
+            ["WinningVariant"] = context.WinningVariant.ToString(),
+            ["VariantAContentItemId"] = context.VariantAContentItemId,
+            ["VariantBContentItemId"] = context.VariantBContentItemId,
+            ["WinnerContentItemId"] = context.WinnerContentItemId,
+            ["LoserContentItemId"] = context.LoserContentItemId,
+        };
+
+        await _workflowManager.TriggerEventAsync(
+            ABTestWinnerDeclaredEvent.EventName,
+            input,
+            correlationId: context.TestId);
+    }
 }

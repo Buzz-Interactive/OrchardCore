@@ -21,4 +21,11 @@ public interface IABTestWorkflowEventHandler
     /// </summary>
     /// <param name="testId">The test ID to clear.</param>
     Task ClearTriggeredRecordAsync(string testId);
+
+    /// <summary>
+    /// Triggers the "A/B Test Winner Declared" workflow event.
+    /// Called when a winner is declared for a test (manually or via workflow).
+    /// </summary>
+    /// <param name="context">The event context containing test data.</param>
+    Task TriggerWinnerDeclaredAsync(ABTestWinnerDeclaredContext context);
 }

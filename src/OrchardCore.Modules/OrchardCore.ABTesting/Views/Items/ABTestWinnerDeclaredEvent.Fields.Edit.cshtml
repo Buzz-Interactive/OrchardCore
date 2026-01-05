@@ -1,0 +1,9 @@
+@using OrchardCore.ABTesting.Workflows.ViewModels
+@model ABTestWinnerDeclaredEventViewModel
+
+<p class="text-muted">
+    @T["This event triggers when an A/B test winner is declared, either manually by an administrator or programmatically via a workflow task."]
+</p>
+<p class="text-muted">
+    @T["The workflow will receive the test details including TestId, TestName, WinningVariant, and the content item IDs of both variants."]
+</p>

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -31,6 +32,8 @@ public class VisitorAssignmentService : IVisitorAssignmentService
     private const string CookieName = ".OrchardCore.ABTesting.Assignments";
     private const string SessionKey = "ABTesting_Assignments";
     private const string HttpContextItemsKey = "ABTesting_CurrentRequestAssignments";
+
+    private static readonly object _itemsLock = new();
 
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITrackingService _trackingService;
@@ -114,7 +117,7 @@ public class VisitorAssignmentService : IVisitorAssignmentService
 
         // First check HttpContext.Items for assignments made during this request
         // This handles the case where assignment was just made but cookie isn't available yet
-        if (httpContext?.Items[HttpContextItemsKey] is Dictionary<string, ABVariant> currentRequestAssignments &&
+        if (httpContext?.Items[HttpContextItemsKey] is ConcurrentDictionary<string, ABVariant> currentRequestAssignments &&
             currentRequestAssignments.TryGetValue(testId, out var currentRequestVariant))
         {
             return currentRequestVariant;
@@ -189,10 +192,19 @@ public class VisitorAssignmentService : IVisitorAssignmentService
         // Store in HttpContext.Items for immediate access within this request
         // This ensures the tracking filter can access the assignment even though
         // cookies won't be available until the next request
-        if (httpContext.Items[HttpContextItemsKey] is not Dictionary<string, ABVariant> currentRequestAssignments)
+        // Use double-check locking with ConcurrentDictionary for thread-safety
+        var currentRequestAssignments = httpContext.Items[HttpContextItemsKey] as ConcurrentDictionary<string, ABVariant>;
+        if (currentRequestAssignments == null)
         {
-            currentRequestAssignments = new Dictionary<string, ABVariant>();
-            httpContext.Items[HttpContextItemsKey] = currentRequestAssignments;
+            lock (_itemsLock)
+            {
+                currentRequestAssignments = httpContext.Items[HttpContextItemsKey] as ConcurrentDictionary<string, ABVariant>;
+                if (currentRequestAssignments == null)
+                {
+                    currentRequestAssignments = new ConcurrentDictionary<string, ABVariant>();
+                    httpContext.Items[HttpContextItemsKey] = currentRequestAssignments;
+                }
+            }
         }
         currentRequestAssignments[testId] = variant;
 

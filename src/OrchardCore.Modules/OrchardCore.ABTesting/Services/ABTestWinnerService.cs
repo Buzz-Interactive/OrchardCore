@@ -1,4 +1,6 @@
 using OrchardCore.ABTesting.Models;
+using OrchardCore.ABTesting.Workflows.Handlers;
+using OrchardCore.ABTesting.Workflows.Models;
 using OrchardCore.Autoroute.Models;
 using OrchardCore.ContentManagement;
 using OrchardCore.Settings;
@@ -20,15 +22,18 @@ public class ABTestWinnerService : IABTestWinnerService
     private readonly IABTestManager _abTestManager;
     private readonly IContentManager _contentManager;
     private readonly ISiteService _siteService;
+    private readonly IABTestWorkflowEventHandler? _workflowEventHandler;
 
     public ABTestWinnerService(
         IABTestManager abTestManager,
         IContentManager contentManager,
-        ISiteService siteService)
+        ISiteService siteService,
+        IABTestWorkflowEventHandler? workflowEventHandler = null)
     {
         _abTestManager = abTestManager;
         _contentManager = contentManager;
         _siteService = siteService;
+        _workflowEventHandler = workflowEventHandler;
     }
 
     /// <inheritdoc/>
@@ -85,6 +90,22 @@ public class ABTestWinnerService : IABTestWinnerService
         test.ConcludedUtc = DateTime.UtcNow;
         test.IsActive = false;
         await _abTestManager.UpdateAsync(test);
+
+        // Trigger the workflow event
+        if (_workflowEventHandler != null)
+        {
+            var context = new ABTestWinnerDeclaredContext
+            {
+                TestId = test.TestId,
+                TestName = test.Name,
+                WinningVariant = winner,
+                VariantAContentItemId = test.VariantAContentItemId,
+                VariantBContentItemId = test.VariantBContentItemId,
+                WinnerContentItemId = winnerContentItemId,
+                LoserContentItemId = loserContentItemId,
+            };
+            await _workflowEventHandler.TriggerWinnerDeclaredAsync(context);
+        }
 
         return true;
     }

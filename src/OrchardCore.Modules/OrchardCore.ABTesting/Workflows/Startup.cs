@@ -20,6 +20,7 @@ public sealed class Startup : StartupBase
     {
         // Events
         services.AddActivity<ABTestWinnerDetectedEvent, ABTestWinnerDetectedEventDisplayDriver>();
+        services.AddActivity<ABTestWinnerDeclaredEvent, ABTestWinnerDeclaredEventDisplayDriver>();
 
         // Tasks
         services.AddActivity<DeclareABTestWinnerTask, DeclareABTestWinnerTaskDisplayDriver>();
